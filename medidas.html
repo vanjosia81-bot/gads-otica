@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#1a1209">
+<title>GAD'S Ótica — Tomador de Medidas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- MediaPipe Face Mesh via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg:#0e0b05;--bg2:#18120a;--bg3:#231a0d;
+  --au:#c9922a;--aum:#e5a83a;--aul:#f5c95e;--aup:#2a1e08;--aux:#f9e9c0;
+  --w:#fff;--tx:#f5ead8;--c1:#c9b89a;--c2:#9a8268;--c3:#5a4a38;
+  --r:#d63031;--o:#e17055;--g:#00b894;
+  --r10:10px;--r16:16px;--r20:20px;
+  --sh:0 4px 24px rgba(201,146,42,.12);--shlg:0 10px 44px rgba(201,146,42,.22);
+  --brd:1px solid rgba(201,146,42,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;transition:opacity .7s,transform .7s}
+#splash.out{opacity:0;transform:scale(1.05);pointer-events:none}
+.spl-ring{width:80px;height:80px;border-radius:50%;border:2px solid rgba(201,146,42,.15);position:relative;margin-bottom:24px;animation:ring-spin 8s linear infinite}
+.spl-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1.5px solid rgba(201,146,42,.3);animation:ring-spin 4s linear infinite reverse}
+.spl-ring::after{content:'📐';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px}
+@keyframes ring-spin{to{transform:rotate(360deg)}}
+.spl-logo{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,12vw,72px);font-weight:700;letter-spacing:.22em;color:var(--au);text-shadow:0 0 40px rgba(201,146,42,.4);animation:fu 1s ease .2s both}
+.spl-sub{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.4em;color:var(--c2);text-transform:uppercase;margin-top:5px;animation:fu .8s ease .5s both}
+.spl-badge{margin-top:20px;display:inline-flex;align-items:center;gap:8px;background:rgba(201,146,42,.1);border:var(--brd);border-radius:50px;padding:7px 16px;font-size:10px;font-weight:600;color:var(--aul);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;animation:fu .8s ease .8s both}
+.spl-dots{display:flex;gap:7px;margin-top:24px;animation:fu .6s ease 1.1s both}
+.spl-dots span{width:8px;height:8px;border-radius:50%;background:var(--au);animation:bl 1.3s ease infinite}
+.spl-dots span:nth-child(2){animation-delay:.2s;opacity:.6}.spl-dots span:nth-child(3){animation-delay:.4s;opacity:.3}
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bl{0%,80%,100%{transform:scale(.45);opacity:.25}40%{transform:scale(1);opacity:1}}
+
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.on{display:flex}
+.toast{position:fixed;top:76px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--bg3);border:var(--brd);color:var(--tx);padding:10px 20px;border-radius:50px;font-size:12.5px;font-weight:500;opacity:0;z-index:9000;transition:all .3s;white-space:nowrap;box-shadow:var(--shlg);max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* NAV */
+.nav{background:rgba(14,11,5,.95);backdrop-filter:blur(12px);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:var(--brd)}
+.nav-back{background:rgba(201,146,42,.1);border:var(--brd);color:var(--au);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;text-decoration:none;transition:all .2s}
+.nav-back:hover{background:rgba(201,146,42,.2)}
+.nav-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--tx);text-align:center;flex:1}
+.nav-badge{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.14em;background:rgba(201,146,42,.1);border:var(--brd);color:var(--aul);padding:4px 11px;border-radius:50px;text-transform:uppercase}
+.gold-stripe{height:3px;background:linear-gradient(90deg,var(--bg) 0%,var(--c3) 15%,var(--au) 40%,var(--aul) 60%,var(--au) 80%,var(--c3) 88%,var(--bg) 100%)}
+
+/* STEPS */
+.steps{display:flex;background:var(--bg2);border-bottom:var(--brd);overflow-x:auto;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step{flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;padding:11px 8px 8px;cursor:pointer;border:none;background:none;position:relative;gap:4px}
+.step::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--au);transform:scaleX(0);transition:transform .3s}
+.step.on::after{transform:scaleX(1)}
+.step-n{width:25px;height:25px;border-radius:50%;border:1.5px solid var(--c3);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--c3);transition:all .3s;font-family:'JetBrains Mono',monospace}
+.step.done .step-n{background:var(--g);border-color:var(--g);color:#fff}
+.step.on .step-n{background:var(--au);border-color:var(--au);color:#0e0b05}
+.step-l{font-size:9px;letter-spacing:.07em;color:var(--c2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;text-align:center;line-height:1.3}
+.step.on .step-l{color:var(--au);font-weight:700}
+
+/* PAGES */
+.pg{display:none;flex:1;overflow-y:auto}
+.pg.on{display:block;animation:pi .3s ease}
+@keyframes pi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* INTRO */
+.intro{padding:24px 18px}
+.intr-hero{background:linear-gradient(135deg,var(--bg3),var(--aup));border-radius:var(--r20);padding:26px 22px;position:relative;overflow:hidden;margin-bottom:20px;border:var(--brd)}
+.intr-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.1) 0%,transparent 70%)}
+.intr-tag{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.3em;color:var(--aul);text-transform:uppercase;margin-bottom:7px;display:block;opacity:.7}
+.intr-t{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--tx);line-height:1.2;margin-bottom:7px}
+.intr-t em{font-style:italic;color:var(--au)}
+.intr-d{font-size:13px;color:var(--c1);line-height:1.65;margin-bottom:20px}
+.intr-i{font-size:46px;position:absolute;right:18px;top:20px;opacity:.3}
+.mcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.mcard{background:var(--bg2);border-radius:var(--r10);padding:14px;border:var(--brd);transition:all .2s}
+.mcard:hover{border-color:rgba(201,146,42,.4);transform:translateY(-1px)}
+.mcard-ic{font-size:22px;margin-bottom:6px;display:block}
+.mcard-n{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.mcard-s{font-size:11px;color:var(--c2);line-height:1.5}
+.mc-full{grid-column:span 2}
+.instr{background:var(--bg2);border-radius:var(--r10);padding:17px;border:var(--brd);margin-bottom:17px}
+.instr-t{font-size:10.5px;font-weight:700;color:var(--au);letter-spacing:.12em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:12px}
+.instr-item{display:flex;gap:11px;margin-bottom:10px}
+.instr-n{width:23px;height:23px;border-radius:50%;background:var(--au);color:#0e0b05;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.instr-desc{font-size:12.5px;color:var(--c1);line-height:1.55;padding-top:2px}
+.ref-row{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;margin-bottom:17px;padding-bottom:3px}
+.ref-row::-webkit-scrollbar{display:none}
+.rm{flex-shrink:0;width:88px;border:1.5px solid var(--c3);border-radius:11px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.rm.on{border-color:var(--au);box-shadow:0 0 0 3px rgba(201,146,42,.15)}
+.rm-thumb{width:100%;aspect-ratio:1;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:28px}
+.rm-name{font-size:9.5px;text-align:center;padding:5px 3px;color:var(--c1);font-weight:700;font-family:'JetBrains Mono',monospace}
+
+/* CAMERA PAGE */
+.cam-topbar{background:var(--bg2);padding:11px 18px;border-bottom:var(--brd);display:flex;align-items:center;justify-content:space-between}
+.cam-status{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--c1)}
+.cam-dot{width:9px;height:9px;border-radius:50%;background:var(--c3)}
+.cam-dot.active{background:var(--g);animation:blink 1.2s ease infinite}
+.cam-dot.analyzing{background:var(--au);animation:blink .6s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.cam-wrap{position:relative;width:100%;background:#000;overflow:hidden}
+.cam-wrap video{width:100%;display:block;transform:scaleX(-1)}
+.cam-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.face-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52%;aspect-ratio:.72;border:2px dashed rgba(201,146,42,.35);border-radius:50%;pointer-events:none;z-index:5;transition:border-color .4s}
+.face-guide.locked{border-color:rgba(201,146,42,.85);box-shadow:0 0 0 3px rgba(201,146,42,.15)}
+.scan-bar{position:absolute;left:0;right:0;height:2.5px;background:linear-gradient(90deg,transparent,rgba(201,146,42,.8),transparent);z-index:8;animation:scan 2.2s ease-in-out infinite;display:none}
+@keyframes scan{0%,100%{top:15%;opacity:.7}50%{top:82%;opacity:1}}
+.scan-bar.on{display:block}
+.hud{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));padding:13px 15px 15px;z-index:7}
+.hud-live{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.hud-m{background:rgba(201,146,42,.1);border:1px solid rgba(201,146,42,.2);border-radius:8px;padding:8px;text-align:center;backdrop-filter:blur(4px);transition:all .4s}
+.hud-m.ready{background:rgba(201,146,42,.22);border-color:rgba(201,146,42,.5)}
+.hud-mv{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#fff;display:block;line-height:1}
+.hud-ml{font-size:8.5px;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;display:block;margin-top:3px;font-family:'JetBrains Mono',monospace}
+.hud-btns{display:flex;gap:9px}
+.btn-cap{flex:1;background:var(--au);border:none;border-radius:10px;padding:13px;color:#0e0b05;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-cap:hover{background:var(--aum)}.btn-cap:disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.4);cursor:not-allowed}
+.btn-cap.prim{background:linear-gradient(135deg,var(--au),var(--aum));box-shadow:0 4px 18px rgba(201,146,42,.4)}
+.btn-sec{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:13px 16px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;backdrop-filter:blur(4px)}
+.cam-overlay-txt{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;align-items:center;gap:5px}
+.col-badge{background:rgba(0,0,0,.65);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#fff;letter-spacing:.1em;white-space:nowrap}
+.col-badge.au{border-color:rgba(201,146,42,.6);color:var(--aul)}
+.face-warn{position:absolute;top:11px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);backdrop-filter:blur(6px);color:#fff;font-size:11.5px;font-weight:700;padding:6px 15px;border-radius:50px;z-index:9;border:1px solid rgba(201,146,42,.3);white-space:nowrap;transition:opacity .3s}
+
+/* RESULTS */
+.results{padding:18px}
+.res-hero{background:linear-gradient(135deg,var(--bg3),var(--aup));border-radius:var(--r20);padding:22px;margin-bottom:18px;position:relative;overflow:hidden;border:var(--brd)}
+.res-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.1) 0%,transparent 70%)}
+.res-client{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--c2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.res-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx);margin-bottom:2px}
+.res-prod{font-size:12px;color:var(--c1)}
+.res-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,146,42,.1);border:var(--brd);border-radius:50px;padding:4px 12px;font-size:9.5px;color:var(--aul);font-family:'JetBrains Mono',monospace;margin-top:10px}
+.resgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.rcard{background:var(--bg2);border-radius:var(--r10);padding:16px;border:var(--brd);text-align:center;position:relative}
+.rcard.full{grid-column:span 2}
+.rcard.highlight{border-color:rgba(201,146,42,.4);background:var(--aup)}
+.rcard-ic{font-size:20px;margin-bottom:5px;display:block}
+.rcard-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;color:var(--au);display:block;line-height:1}
+.rcard-unit{font-size:12px;color:var(--c2);font-family:'JetBrains Mono',monospace;margin-left:2px}
+.rcard-lbl{font-size:9.5px;letter-spacing:.1em;color:var(--c2);text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-top:4px;display:block}
+.rcard-sub{font-size:11px;color:var(--c1);margin-top:3px;font-style:italic}
+.dnp-row{display:flex;align-items:center;justify-content:space-around;margin-top:7px}
+.dnp-side{text-align:center}
+.dnp-v{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--au)}
+.dnp-l{font-size:9.5px;color:var(--c2);font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.dnp-div{width:1px;height:36px;background:rgba(201,146,42,.2)}
+.res-photo-wrap{border-radius:var(--r10);overflow:hidden;margin-bottom:18px;box-shadow:var(--sh);position:relative}
+.res-photo-wrap img{width:100%;display:block}
+
+/* FORMS */
+.rx-section{background:var(--bg2);border-radius:var(--r10);border:var(--brd);padding:17px;margin-bottom:17px}
+.rx-t{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--au);margin-bottom:12px}
+.rx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rx-cell{display:flex;flex-direction:column;gap:3px}
+.rx-l{font-size:9.5px;color:var(--c2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+.rx-i{width:100%;padding:9px;border:1.5px solid var(--c3);border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:center;outline:none;background:var(--bg3);transition:border-color .2s;color:var(--tx)}
+.rx-i:focus{border-color:var(--au);background:var(--bg)}
+.client-form{background:var(--bg2);border-radius:var(--r10);border:var(--brd);padding:17px;margin-bottom:17px}
+.cf-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--au);margin-bottom:12px}
+.cf-inp{width:100%;padding:11px 14px;border:1.5px solid var(--c3);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;background:var(--bg3);transition:border-color .2s;color:var(--tx)}
+.cf-inp:focus{border-color:var(--au);background:var(--bg)}
+.cf-inp::placeholder{color:var(--c3)}
+.compat{background:var(--bg2);border-radius:var(--r10);border:var(--brd);padding:17px;margin-bottom:17px}
+.compat-t{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--au);margin-bottom:13px}
+.face-type{display:flex;align-items:center;gap:13px;margin-bottom:13px}
+.ft-ic{font-size:30px;width:50px;height:50px;background:var(--aup);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:var(--brd)}
+.ft-t{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:2px}
+.ft-s{font-size:12px;color:var(--c1);line-height:1.5}
+.recs{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:5px}
+.recs::-webkit-scrollbar{display:none}
+.rec{flex-shrink:0;width:88px;border:1.5px solid var(--c3);border-radius:11px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--bg3)}
+.rec.ok{border-color:var(--g)}.rec.ok .rec-name{color:var(--g)}
+.rec.bad{border-color:var(--r);opacity:.5}
+.rec-thumb{width:100%;aspect-ratio:1;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px}
+.rec-name{font-size:9.5px;text-align:center;padding:5px 3px;color:var(--c1);font-weight:700;font-family:'JetBrains Mono',monospace}
+.rec-tag{font-size:8.5px;text-align:center;padding:0 3px 5px;font-family:'JetBrains Mono',monospace;font-weight:700}
+.res-actions{display:flex;gap:10px;margin-bottom:26px}
+.ra{flex:1;padding:13px;border-radius:var(--r10);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:700;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.ra-au{background:linear-gradient(135deg,var(--au),var(--aum));color:#0e0b05}
+.ra-au:hover{box-shadow:0 4px 16px rgba(201,146,42,.4);transform:translateY(-1px)}
+.ra-wa{background:#25D366;color:#fff}
+.ra-pr{background:var(--bg3);color:var(--c1);border:var(--brd)}
+
+/* LOADING OVERLAY */
+#loadOv{position:fixed;inset:0;z-index:800;background:rgba(14,11,5,.95);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;backdrop-filter:blur(8px)}
+#loadOv.on{display:flex}
+.load-ring{width:64px;height:64px;border-radius:50%;border:3px solid rgba(201,146,42,.15);border-top-color:var(--au);animation:spin 1s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-t{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--tx);font-weight:700;margin-bottom:6px}
+.load-s{font-size:12px;color:var(--c2);font-family:'JetBrains Mono',monospace;letter-spacing:.06em}
+.load-steps{display:flex;flex-direction:column;gap:8px;margin-top:22px;text-align:left;max-width:280px}
+.ls{display:flex;align-items:center;gap:10px;font-size:12.5px;color:rgba(201,146,42,.35);transition:color .4s;font-family:'JetBrains Mono',monospace}
+.ls.done{color:var(--aul)}
+.ls-ic{font-size:15px;width:22px;text-align:center}
+
+@media print{
+  .nav,.steps,.cam-page,.intro,#splash,.toast{display:none!important}
+  .results{display:block!important;padding:0}
+  .res-actions{display:none!important}
+  body{background:#fff;color:#000}
+}
+@media(min-width:600px){
+  .cam-wrap{max-width:440px;margin:0 auto}
+  .resgrid{grid-template-columns:repeat(3,1fr)}
+  .rx-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="spl-ring"></div>
+  <div class="spl-logo">GAD'S</div>
+  <div class="spl-sub">Tomador de Medidas · Sistema Óptico</div>
+  <div class="spl-badge">📐 DNP · Altura · Diâmetro · Ângulo · DCV</div>
+  <div class="spl-dots"><span></span><span></span><span></span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="loadOv">
+  <div class="load-ring"></div>
+  <div class="load-t">Analisando Medidas</div>
+  <div class="load-s" id="loadMsg">Detectando pontos faciais...</div>
+  <div class="load-steps">
+    <div class="ls" id="ls1"><span class="ls-ic">👁️</span>Detectar landmarks faciais</div>
+    <div class="ls" id="ls2"><span class="ls-ic">📏</span>Calcular DNP bilateral</div>
+    <div class="ls" id="ls3"><span class="ls-ic">📐</span>Medir altura de montagem</div>
+    <div class="ls" id="ls4"><span class="ls-ic">🔭</span>Estimar diâmetro mínimo</div>
+    <div class="ls" id="ls5"><span class="ls-ic">✅</span>Gerar laudo completo</div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="nav">
+    <a href="index.html" class="nav-back">←</a>
+    <div class="nav-title">Tomador de Medidas</div>
+    <span class="nav-badge">Digital</span>
+  </nav>
+  <div class="gold-stripe"></div>
+
+  <div class="steps">
+    <button class="step on" id="st0" onclick="goStep(0)"><span class="step-n">1</span><span class="step-l">Modelo</span></button>
+    <button class="step" id="st1" onclick="goStep(1)"><span class="step-n">2</span><span class="step-l">Câmera</span></button>
+    <button class="step" id="st2" onclick="goStep(2)"><span class="step-n">3</span><span class="step-l">Resultado</span></button>
+  </div>
+
+  <!-- STEP 0: INTRO -->
+  <div class="pg on" id="pg0">
+    <div class="intro">
+      <div class="intr-hero">
+        <span class="intr-i">📐</span>
+        <span class="intr-tag">Ferramenta Clínica · GAD'S Ótica</span>
+        <h1 class="intr-t">Tomador de <em>Medidas</em> Digital</h1>
+        <p class="intr-d">Captura DNP, Altura de Montagem, Diâmetro Mínimo, Ângulo Pantoscópico e DCV usando apenas a câmera do seu dispositivo. Tecnologia MediaPipe + IA.</p>
+        <button class="btn-cap prim" style="max-width:230px" onclick="goStep(1)">📷 Iniciar Medição →</button>
+      </div>
+
+      <div style="margin-bottom:15px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;margin-bottom:3px;color:var(--tx)">O que será medido</div>
+        <div style="font-size:12px;color:var(--c2);margin-bottom:13px">Todas as medidas para prescrição de lentes progressivas e digitais</div>
+      </div>
+      <div class="mcard-grid">
+        <div class="mcard"><span class="mcard-ic">👁️</span><div class="mcard-n">DNP Binocular</div><div class="mcard-s">Distância naso-pupilar OD e OE</div></div>
+        <div class="mcard"><span class="mcard-ic">📏</span><div class="mcard-n">Altura de Montagem</div><div class="mcard-s">Pupila ao bordo inferior do aro</div></div>
+        <div class="mcard"><span class="mcard-ic">🔭</span><div class="mcard-n">Diâmetro Mínimo</div><div class="mcard-s">Diâmetro mínimo da lente</div></div>
+        <div class="mcard"><span class="mcard-ic">📐</span><div class="mcard-n">Ângulo Pantoscópico</div><div class="mcard-s">Inclinação da armação</div></div>
+        <div class="mcard mc-full"><span class="mcard-ic">🎯</span><div class="mcard-n">Dist. Córnea-Vértice (DCV)</div><div class="mcard-s">Entre a córnea e a lente. Essencial para alta dioptria e lentes de contato</div></div>
+      </div>
+
+      <div class="instr">
+        <div class="instr-t">📋 Instruções para melhor resultado</div>
+        <div class="instr-item"><div class="instr-n">1</div><div class="instr-desc">Posicione o rosto frontalmente, a 40–60 cm da câmera</div></div>
+        <div class="instr-item"><div class="instr-n">2</div><div class="instr-desc">Boa iluminação no rosto, evite contraluz</div></div>
+        <div class="instr-item"><div class="instr-n">3</div><div class="instr-desc">Olhe diretamente para a câmera e mantenha o rosto estático</div></div>
+        <div class="instr-item"><div class="instr-n">4</div><div class="instr-desc">Se possível, use a armação de referência no rosto durante a captura</div></div>
+        <div class="instr-item"><div class="instr-n">5</div><div class="instr-desc">Aguarde o indicador ficar dourado (estável) antes de capturar</div></div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;margin-bottom:3px;color:var(--tx)">Selecione a Armação de Referência</div>
+        <div style="font-size:12px;color:var(--c2);margin-bottom:12px">O modelo determina parâmetros base para cálculo do diâmetro</div>
+        <div class="ref-row" id="modelRow"></div>
+      </div>
+      <button class="btn-cap prim" style="width:100%;margin-bottom:18px" onclick="goStep(1)">📷 Iniciar Captura com Câmera →</button>
+    </div>
+  </div>
+
+  <!-- STEP 1: CAMERA -->
+  <div class="pg" id="pg1">
+    <div>
+      <div class="cam-topbar">
+        <div class="cam-status">
+          <div class="cam-dot" id="camDot"></div>
+          <span id="camStatusTxt">Aguardando câmera...</span>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--c2);letter-spacing:.1em" id="fpsCounter"></span>
+      </div>
+
+      <div class="cam-wrap" id="camWrap" style="max-height:72vh">
+        <video id="vid" autoplay playsinline muted></video>
+        <canvas id="ovCanvas"></canvas>
+        <div class="face-guide" id="faceGuide"></div>
+        <div class="scan-bar" id="scanBar"></div>
+        <div class="cam-overlay-txt">
+          <div class="col-badge" id="colBadgeMain">Posicione o rosto no guia oval</div>
+          <div class="col-badge au" id="colBadgeSub" style="display:none"></div>
+        </div>
+        <div class="face-warn" id="faceWarn" style="display:none">⚠️ Rosto não detectado</div>
+        <div class="hud">
+          <div class="hud-live">
+            <div class="hud-m" id="hm-dnp"><span class="hud-mv" id="hv-dnp">--</span><span class="hud-ml">DNP Total</span></div>
+            <div class="hud-m" id="hm-alt"><span class="hud-mv" id="hv-alt">--</span><span class="hud-ml">Altura</span></div>
+            <div class="hud-m" id="hm-diam"><span class="hud-mv" id="hv-diam">--</span><span class="hud-ml">Diâmetro</span></div>
+          </div>
+          <div class="hud-btns">
+            <button class="btn-sec" id="startCamBtn" onclick="startCam()">📷 Ativar Câmera</button>
+            <button class="btn-cap prim" id="captureBtn" onclick="captureMeasures()" disabled>✅ Capturar Medidas</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 18px;background:var(--bg2);border-top:var(--brd)">
+        <div style="font-size:10.5px;color:var(--c2);text-align:center;line-height:1.6;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+          🔒 A câmera processa localmente · Nenhuma imagem é enviada a servidores externos
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: RESULTS -->
+  <div class="pg" id="pg2">
+    <div class="results">
+      <div class="res-hero">
+        <div class="res-client">Cliente · GAD'S Ótica — Araçá</div>
+        <div class="res-name" id="clientNameDisplay">—</div>
+        <div class="res-prod" id="selectedModelDisplay">Medição Digital — Sistema GAD'S</div>
+        <span class="res-badge"><span style="color:var(--aul)">⬤</span> Medição Digital · <span id="resBadgeDate"></span></span>
+      </div>
+
+      <div class="res-photo-wrap" id="snapWrap" style="display:none">
+        <img id="snapImg" src="" alt="Captura com overlay">
+      </div>
+
+      <div class="resgrid">
+        <div class="rcard full">
+          <span class="rcard-ic">👁️</span>
+          <span class="rcard-lbl">DNP Binocular</span>
+          <div class="dnp-row">
+            <div class="dnp-side"><div class="dnp-v" id="res-dnp-od">--</div><div class="dnp-l">OD (Direito)</div></div>
+            <div class="dnp-div"></div>
+            <div class="dnp-side" style="text-align:center"><div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--au)" id="res-dnp-tot">--</div><div class="dnp-l">Total (mm)</div></div>
+            <div class="dnp-div"></div>
+            <div class="dnp-side"><div class="dnp-v" id="res-dnp-oe">--</div><div class="dnp-l">OE (Esquerdo)</div></div>
+          </div>
+        </div>
+        <div class="rcard highlight">
+          <span class="rcard-ic">📏</span>
+          <span class="rcard-val" id="res-alt">--<span class="rcard-unit">mm</span></span>
+          <span class="rcard-lbl">Altura de Montagem</span>
+          <div class="rcard-sub" id="res-alt-sub"></div>
+        </div>
+        <div class="rcard">
+          <span class="rcard-ic">🔭</span>
+          <span class="rcard-val" id="res-diam">--<span class="rcard-unit">mm</span></span>
+          <span class="rcard-lbl">Diâmetro Mínimo</span>
+        </div>
+        <div class="rcard">
+          <span class="rcard-ic">📐</span>
+          <span class="rcard-val" id="res-ang">--<span class="rcard-unit">°</span></span>
+          <span class="rcard-lbl">Ângulo Pantoscópico</span>
+        </div>
+        <div class="rcard">
+          <span class="rcard-ic">🎯</span>
+          <span class="rcard-val" id="res-dcv">--<span class="rcard-unit">mm</span></span>
+          <span class="rcard-lbl">Dist. Córnea-Vértice</span>
+        </div>
+        <div class="rcard">
+          <span class="rcard-ic">📏</span>
+          <span class="rcard-val" id="res-larg">--<span class="rcard-unit">mm</span></span>
+          <span class="rcard-lbl">Largura do Aro</span>
+        </div>
+        <div class="rcard">
+          <span class="rcard-ic">↕️</span>
+          <span class="rcard-val" id="res-halt">--<span class="rcard-unit">mm</span></span>
+          <span class="rcard-lbl">Altura do Aro</span>
+        </div>
+      </div>
+
+      <div class="rx-section">
+        <div class="rx-t">📋 Dados da Receita (opcional)</div>
+        <div style="font-size:11px;color:var(--c2);margin-bottom:12px">Preencha para incluir no laudo completo</div>
+        <div style="font-size:9.5px;font-weight:700;color:var(--c1);margin-bottom:7px;font-family:'JetBrains Mono',monospace;letter-spacing:.1em">OLHO DIREITO</div>
+        <div class="rx-grid">
+          <div class="rx-cell"><div class="rx-l">ESF</div><input class="rx-i" id="rx-od-esf" placeholder="+0.00"></div>
+          <div class="rx-cell"><div class="rx-l">CIL</div><input class="rx-i" id="rx-od-cil" placeholder="-0.00"></div>
+          <div class="rx-cell"><div class="rx-l">EIXO</div><input class="rx-i" id="rx-od-eixo" placeholder="180"></div>
+          <div class="rx-cell"><div class="rx-l">ADD</div><input class="rx-i" id="rx-od-add" placeholder="+0.00"></div>
+        </div>
+        <div style="font-size:9.5px;font-weight:700;color:var(--c1);margin:11px 0 7px;font-family:'JetBrains Mono',monospace;letter-spacing:.1em">OLHO ESQUERDO</div>
+        <div class="rx-grid">
+          <div class="rx-cell"><div class="rx-l">ESF</div><input class="rx-i" id="rx-oe-esf" placeholder="+0.00"></div>
+          <div class="rx-cell"><div class="rx-l">CIL</div><input class="rx-i" id="rx-oe-cil" placeholder="-0.00"></div>
+          <div class="rx-cell"><div class="rx-l">EIXO</div><input class="rx-i" id="rx-oe-eixo" placeholder="180"></div>
+          <div class="rx-cell"><div class="rx-l">ADD</div><input class="rx-i" id="rx-oe-add" placeholder="+0.00"></div>
+        </div>
+      </div>
+
+      <div class="client-form">
+        <div class="cf-lbl">Dados do Cliente</div>
+        <input class="cf-inp" id="cfName" placeholder="Nome completo do cliente" oninput="document.getElementById('clientNameDisplay').textContent=this.value||'—'">
+        <input class="cf-inp" id="cfPhone" placeholder="WhatsApp (81) 9xxxx-xxxx">
+        <input class="cf-inp" id="cfProd" placeholder="Produto indicado (ex: Progressiva Digital)" oninput="document.getElementById('selectedModelDisplay').textContent=this.value||'Medição Digital — Sistema GAD\'S'">
+      </div>
+
+      <div class="compat">
+        <div class="compat-t">Análise de Formato do Rosto</div>
+        <div class="face-type">
+          <div class="ft-ic" id="faceTypeIc">🔶</div>
+          <div><div class="ft-t" id="faceTypeName">Analisando...</div><div class="ft-s" id="faceTypeDesc">Complete a medição para ver a análise</div></div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--c2);margin-bottom:9px;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace">Armações recomendadas</div>
+        <div class="recs" id="recsGrid"></div>
+      </div>
+
+      <div class="res-actions">
+        <button class="ra ra-au" onclick="saveMeasures()">💾 Salvar</button>
+        <button class="ra ra-wa" onclick="sendWA()">💬 WhatsApp</button>
+        <button class="ra ra-pr" onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+
+      <button style="width:100%;padding:13px;background:var(--bg2);border:var(--brd);border-radius:var(--r10);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--au);cursor:pointer;margin-bottom:28px" onclick="goStep(1)">↺ Refazer Medição</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let camStream=null,faceMesh=null,lastLandmarks=null,captureReady=false,curStep=0;
+let selectedModel=null,measurements={},faceStableFrames=0,animFrame=null;
+let fpsFrames=0,fpsLast=Date.now(),snapDataURL=null,pxPerMm=8;
+
+function toast(msg,bg){
+  const t=$('toast');t.textContent=msg;t.style.background=bg||'var(--bg3)';
+  t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+const MODELS=[
+  {id:'rect',name:'Retangular',emoji:'🕶️',largAro:52,altAro:32,ponte:17,faceType:['oval','quadrado']},
+  {id:'round',name:'Redondo',emoji:'🔵',largAro:48,altAro:48,ponte:18,faceType:['quadrado','coração']},
+  {id:'av',name:'Aviador',emoji:'😎',largAro:56,altAro:44,ponte:14,faceType:['oval','coração']},
+  {id:'cat',name:'Gatinho',emoji:'✨',largAro:54,altAro:38,ponte:16,faceType:['oval','redondo']},
+  {id:'hex',name:'Hexagonal',emoji:'⬡',largAro:50,altAro:36,ponte:17,faceType:['oval']},
+  {id:'sq',name:'Quadrado',emoji:'⬜',largAro:52,altAro:34,ponte:18,faceType:['oval','redondo']},
+];
+selectedModel=MODELS[0];
+
+function initModelRow(){
+  $('modelRow').innerHTML=MODELS.map((m,i)=>`
+    <div class="rm${i===0?' on':''}" id="rm-${m.id}" onclick="selModel('${m.id}')">
+      <div class="rm-thumb">${m.emoji}</div>
+      <div class="rm-name">${m.name}</div>
+    </div>`).join('');
+}
+function selModel(id){
+  selectedModel=MODELS.find(m=>m.id===id);
+  document.querySelectorAll('.rm').forEach(r=>r.classList.remove('on'));
+  $('rm-'+id).classList.add('on');
+}
+
+function goStep(s){
+  [0,1,2].forEach(i=>{
+    $('pg'+i).classList.toggle('on',i===s);
+    $('st'+i).classList.toggle('on',i===s);
+    if(i<s) $('st'+i).classList.add('done');
+  });
+  curStep=s;
+  if(s===1&&!camStream) setTimeout(startCam,300);
+  if(s===2) renderResults();
+}
+
+function initFaceMesh(){
+  faceMesh=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+  faceMesh.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:.72,minTrackingConfidence:.72});
+  faceMesh.onResults(onFaceResults);
+}
+
+async function startCam(){
+  $('startCamBtn').textContent='⏳ Iniciando...';$('startCamBtn').disabled=true;
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false});
+    const vid=$('vid');vid.srcObject=camStream;await vid.play();
+    $('camDot').classList.add('active');
+    $('camStatusTxt').textContent='Câmera ativa — Posicione o rosto';
+    $('startCamBtn').style.display='none';$('scanBar').classList.add('on');
+    vid.onloadedmetadata=()=>{const c=$('ovCanvas');c.width=vid.videoWidth;c.height=vid.videoHeight;c.style.transform='scaleX(-1)';};
+    if(!faceMesh) initFaceMesh();
+    processCamFrame();
+    toast('📷 Câmera ativa! Posicione o rosto no guia oval.');
+  }catch(e){
+    toast('❌ Permissão de câmera negada. Verifique as configurações.','var(--r)');
+    $('startCamBtn').textContent='📷 Ativar Câmera';$('startCamBtn').disabled=false;
+  }
+}
+
+async function processCamFrame(){
+  const vid=$('vid');
+  if(!vid||vid.readyState<2){animFrame=requestAnimationFrame(processCamFrame);return;}
+  await faceMesh.send({image:vid});
+  fpsFrames++;
+  const now=Date.now();
+  if(now-fpsLast>=1000){$('fpsCounter').textContent=fpsFrames+' fps';fpsFrames=0;fpsLast=now;}
+  animFrame=requestAnimationFrame(processCamFrame);
+}
+
+function onFaceResults(results){
+  const canvas=$('ovCanvas');if(!canvas) return;
+  const ctx=canvas.getContext('2d');const w=canvas.width,h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  if(!results.multiFaceLandmarks||!results.multiFaceLandmarks.length){
+    faceStableFrames=0;captureReady=false;
+    $('faceWarn').style.display='block';
+    $('colBadgeMain').textContent='⚠️ Rosto não detectado';
+    $('faceGuide').classList.remove('locked');
+    $('captureBtn').disabled=true;
+    $('camDot').className='cam-dot active';
+    $('camStatusTxt').textContent='Posicione o rosto no guia';
+    updateHUDlive(null);return;
+  }
+  $('faceWarn').style.display='none';
+  const lm=results.multiFaceLandmarks[0];lastLandmarks=lm;
+  drawFaceOverlay(ctx,lm,w,h);
+  const m=calcMeasurements(lm,w,h);updateHUDlive(m);
+  faceStableFrames++;
+  if(faceStableFrames>25){
+    captureReady=true;$('faceGuide').classList.add('locked');
+    $('captureBtn').disabled=false;$('captureBtn').textContent='✅ Capturar Medidas';
+    $('camDot').className='cam-dot analyzing';
+    $('camStatusTxt').textContent='✅ Estável — pronto para capturar!';
+    $('colBadgeMain').textContent='✅ Rosto detectado e estável';
+    $('colBadgeSub').style.display='block';
+    $('colBadgeSub').textContent=`DNP: ${m.dnpOD}mm + ${m.dnpOE}mm = ${m.dnpTot}mm`;
+  }else{
+    $('captureBtn').disabled=true;
+    $('colBadgeMain').textContent=`🔄 Estabilizando... (${faceStableFrames}/25)`;
+    $('colBadgeSub').style.display='none';
+  }
+}
+
+function drawFaceOverlay(ctx,lm,w,h){
+  const pt=i=>({x:lm[i].x*w,y:lm[i].y*h});
+  const ririsC=pt(473),lirisC=pt(468),ririsR=pt(474);
+  const irisRadiusPx=Math.abs(ririsR.x-ririsC.x);
+  if(irisRadiusPx>3) pxPerMm=(irisRadiusPx*2)/11.7;
+
+  // Iris circles
+  ctx.strokeStyle='rgba(201,146,42,.85)';ctx.lineWidth=2;
+  [{c:ririsC,r:irisRadiusPx},{c:lirisC,r:irisRadiusPx}].forEach(({c,r})=>{
+    ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(c.x-10,c.y);ctx.lineTo(c.x+10,c.y);ctx.moveTo(c.x,c.y-10);ctx.lineTo(c.x,c.y+10);
+    ctx.strokeStyle='rgba(255,220,80,.9)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.strokeStyle='rgba(201,146,42,.85)';ctx.lineWidth=2;
+  });
+
+  // Nose bridge midline
+  const nose=pt(168);
+  ctx.beginPath();ctx.moveTo(nose.x,ririsC.y-40);ctx.lineTo(nose.x,ririsC.y+40);
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+
+  // DNP lines
+  ctx.strokeStyle='rgba(201,146,42,.9)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(nose.x,ririsC.y);ctx.lineTo(ririsC.x,ririsC.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(nose.x,lirisC.y);ctx.lineTo(lirisC.x,lirisC.y);ctx.stroke();
+  ctx.strokeStyle='rgba(245,199,94,.88)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(ririsC.x,(ririsC.y+lirisC.y)/2);ctx.lineTo(lirisC.x,(ririsC.y+lirisC.y)/2);ctx.stroke();
+
+  // Tick marks
+  ctx.strokeStyle='rgba(201,146,42,.9)';ctx.lineWidth=2;
+  [ririsC.x,lirisC.x,nose.x].forEach(x=>{ctx.beginPath();ctx.moveTo(x,ririsC.y-8);ctx.lineTo(x,ririsC.y+8);ctx.stroke();});
+
+  // Ruler top
+  const eyeTop=Math.min(ririsC.y,lirisC.y)-irisRadiusPx*2.8;
+  const frameLeft=ririsC.x+irisRadiusPx*2.4,frameRight=lirisC.x-irisRadiusPx*2.4;
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(frameLeft,eyeTop);ctx.lineTo(frameRight,eyeTop);ctx.stroke();
+  [frameLeft,frameRight].forEach(x=>{ctx.beginPath();ctx.moveTo(x,eyeTop-8);ctx.lineTo(x,eyeTop+8);ctx.stroke();});
+  const widthMm=((Math.abs(frameRight-frameLeft))/pxPerMm).toFixed(0);
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.font=`bold ${Math.max(10,w*.018)}px JetBrains Mono,monospace`;
+  ctx.textAlign='center';ctx.fillText(`${widthMm}mm`,(frameLeft+frameRight)/2,eyeTop-12);
+
+  // Altura line
+  const botY=ririsC.y+irisRadiusPx*5.5,chin=pt(152);
+  if(botY<chin.y){
+    ctx.strokeStyle='rgba(245,199,94,.55)';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.moveTo(frameLeft,botY);ctx.lineTo(frameRight,botY);ctx.stroke();ctx.setLineDash([]);
+    const midXf=(frameLeft+frameRight)/2;
+    ctx.strokeStyle='rgba(245,199,94,.8)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(midXf,ririsC.y);ctx.lineTo(midXf,botY);ctx.stroke();
+    const altMm=((botY-ririsC.y)/pxPerMm).toFixed(0);
+    ctx.fillStyle='rgba(245,199,94,.95)';ctx.font=`bold ${Math.max(9,w*.016)}px JetBrains Mono,monospace`;
+    ctx.textAlign='left';ctx.fillText(`Alt:${altMm}mm`,midXf+5,(ririsC.y+botY)/2);
+  }
+
+  // Face contour
+  const fc=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+  ctx.beginPath();fc.forEach((idx,i)=>{const p=pt(idx);i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});ctx.closePath();
+  ctx.strokeStyle='rgba(201,146,42,.15)';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+function calcMeasurements(lm,w,h){
+  const px=i=>lm[i].x*w,py=i=>lm[i].y*h;
+  const dist=(a,b)=>Math.sqrt((px(a)-px(b))**2+(py(a)-py(b))**2);
+  const ririsX=px(473),ririsY=py(473),lirisX=px(468),lirisY=py(468),ririsRx=px(474);
+  const irisRadPx=Math.abs(ririsRx-ririsX);
+  if(irisRadPx>3) pxPerMm=(irisRadPx*2)/11.7;
+  const noseX=px(168);
+  const dnpOD=Math.round(Math.abs(noseX-ririsX)/pxPerMm);
+  const dnpOE=Math.round(Math.abs(noseX-lirisX)/pxPerMm);
+  const dnpTot=dnpOD+dnpOE;
+  const aroH=selectedModel?selectedModel.altAro:34;
+  const altPx=(ririsY+irisRadPx*5.8)-ririsY;
+  const alt=Math.max(14,Math.round(altPx/pxPerMm));
+  const frameWidth_px=Math.abs(lirisX-ririsX)+irisRadPx*4.8;
+  const largAro=Math.round(frameWidth_px/pxPerMm/2);
+  const dnpSemi=Math.max(dnpOD,dnpOE);
+  const diam=Math.round(Math.sqrt(dnpSemi**2+alt**2)+2);
+  const noseTip=py(4),chin=py(152),foreHead=py(10);
+  const faceTilt=Math.atan2(px(152)-px(10),chin-foreHead)*180/Math.PI;
+  const angPant=Math.max(6,Math.min(14,Math.round(8+faceTilt*.5)));
+  const cheekDepth_px=dist(234,93);
+  const dcv=Math.max(10,Math.min(16,Math.round(12+cheekDepth_px/pxPerMm*.08)));
+  return{dnpOD,dnpOE,dnpTot,alt,largAro,altAro:aroH,diam,angPant,dcv};
+}
+
+function updateHUDlive(m){
+  if(!m){['dnp','alt','diam'].forEach(k=>{$('hv-'+k).textContent='--';$('hm-'+k).classList.remove('ready');});return;}
+  $('hv-dnp').textContent=m.dnpTot+'mm';$('hv-alt').textContent=m.alt+'mm';$('hv-diam').textContent=m.diam+'mm';
+  ['dnp','alt','diam'].forEach(k=>$('hm-'+k).classList.add('ready'));
+}
+
+function captureMeasures(){
+  if(!captureReady||!lastLandmarks){toast('⚠️ Aguarde o rosto ser detectado','var(--o)');return;}
+  const vid=$('vid');
+  const m=calcMeasurements(lastLandmarks,vid.videoWidth||640,vid.videoHeight||480);
+  measurements=m;
+  const snap=document.createElement('canvas');snap.width=vid.videoWidth;snap.height=vid.videoHeight;
+  const sctx=snap.getContext('2d');
+  sctx.scale(-1,1);sctx.drawImage(vid,-snap.width,0);sctx.scale(-1,1);
+  drawFaceOverlay(sctx,lastLandmarks,snap.width,snap.height);
+  snapDataURL=snap.toDataURL('image/jpeg',.88);
+  showLoading(m);
+}
+
+function showLoading(m){
+  $('loadOv').classList.add('on');
+  const steps=['ls1','ls2','ls3','ls4','ls5'];
+  const msgs=['Detectando 468 landmarks faciais...','Calculando DNP binocular...','Medindo altura de montagem...','Estimando diâmetro mínimo...','Gerando laudo completo...'];
+  let i=0;
+  const interval=setInterval(()=>{
+    if(i<steps.length){$(steps[i]).classList.add('done');$('loadMsg').textContent=msgs[i]||'...';i++;}
+    else{clearInterval(interval);setTimeout(()=>{$('loadOv').classList.remove('on');goStep(2);toast('✅ Medidas capturadas com sucesso!');},500);}
+  },600);
+}
+
+function renderResults(){
+  const m=measurements;if(!m.dnpTot) return;
+  $('res-dnp-od').textContent=m.dnpOD;$('res-dnp-oe').textContent=m.dnpOE;
+  $('res-dnp-tot').innerHTML=m.dnpTot+'<span style="font-size:13px;color:var(--c2)">mm</span>';
+  $('res-alt').innerHTML=m.alt+'<span class="rcard-unit">mm</span>';
+  $('res-alt-sub').textContent=m.alt<=18?'Baixa — atenção em progressivas':m.alt>=22?'Ideal para progressiva':'Adequada para multifocal';
+  $('res-diam').innerHTML=m.diam+'<span class="rcard-unit">mm</span>';
+  $('res-ang').innerHTML=m.angPant+'<span class="rcard-unit">°</span>';
+  $('res-dcv').innerHTML=m.dcv+'<span class="rcard-unit">mm</span>';
+  $('res-larg').innerHTML=m.largAro+'<span class="rcard-unit">mm</span>';
+  $('res-halt').innerHTML=m.altAro+'<span class="rcard-unit">mm</span>';
+  $('resBadgeDate').textContent=new Date().toLocaleDateString('pt-BR');
+  if(snapDataURL){$('snapImg').src=snapDataURL;$('snapWrap').style.display='block';}
+  const ratio=m.dnpTot/m.alt;let faceType,faceDesc,faceIc;
+  if(ratio>4.2){faceType='Rosto Longo';faceDesc='Recomendamos armações largas e horizontais para equilibrar as proporções.';faceIc='🔷';}
+  else if(ratio<3.2){faceType='Rosto Redondo';faceDesc='Armações angulares e retangulares alongam visualmente o rosto.';faceIc='🔵';}
+  else if(m.dnpTot>68){faceType='Rosto Quadrado';faceDesc='Armações arredondadas e ovais suavizam as linhas angulares.';faceIc='⬜';}
+  else{faceType='Rosto Oval';faceDesc='Formato ideal! Quase todos os estilos de armação combinam bem.';faceIc='🔶';}
+  $('faceTypeName').textContent=faceType;$('faceTypeDesc').textContent=faceDesc;$('faceTypeIc').textContent=faceIc;
+  const faceKey=faceType.split(' ')[1].toLowerCase();
+  $('recsGrid').innerHTML=MODELS.map(m=>{
+    const ok=m.faceType.includes(faceKey)||faceKey==='oval';
+    return`<div class="rec ${ok?'ok':'bad'}"><div class="rec-thumb">${m.emoji}</div><div class="rec-name">${m.name}</div><div class="rec-tag" style="color:${ok?'var(--g)':'var(--r)'}">${ok?'✓ Rec':'✗ Evitar'}</div></div>`;
+  }).join('');
+}
+
+function saveMeasures(){
+  const m=measurements;const client=$('cfName').value.trim()||'Cliente';
+  const saved=JSON.parse(localStorage.getItem('gads_measures')||'[]');
+  saved.push({client,phone:$('cfPhone').value.trim(),product:$('cfProd').value.trim(),date:new Date().toISOString(),measures:m,
+    rx:{od:{esf:$('rx-od-esf').value,cil:$('rx-od-cil').value,eixo:$('rx-od-eixo').value,add:$('rx-od-add').value},
+        oe:{esf:$('rx-oe-esf').value,cil:$('rx-oe-cil').value,eixo:$('rx-oe-eixo').value,add:$('rx-oe-add').value}},model:selectedModel?.id});
+  localStorage.setItem('gads_measures',JSON.stringify(saved));
+  toast('💾 Medidas salvas com sucesso!');
+}
+
+function sendWA(){
+  const m=measurements;const client=$('cfName').value.trim()||'Cliente';const prod=$('cfProd').value.trim()||'Progressiva Digital';
+  const msg=`🕶️ *GAD'S Ótica — Medidas Ópticas*\n\n👤 *Cliente:* ${client}\n📦 *Produto:* ${prod}\n\n📏 *DNP:* OD ${m.dnpOD}mm | OE ${m.dnpOE}mm | Total ${m.dnpTot}mm\n↕️ *Altura de Montagem:* ${m.alt}mm\n🔭 *Diâmetro Mínimo:* ${m.diam}mm\n📐 *Ângulo Pantoscópico:* ${m.angPant}°\n🎯 *Dist. Córnea-Vértice:* ${m.dcv}mm\n📏 *Largura do Aro:* ${m.largAro}mm\n\n📅 ${new Date().toLocaleDateString('pt-BR')} — Sistema GAD'S Ótica`;
+  window.open('https://wa.me/5581997821384?text='+encodeURIComponent(msg),'_blank');
+}
+
+function checkMediaPipeReady(){
+  if(typeof FaceMesh==='undefined'){
+    const camPage=document.querySelector('.cam-wrap').parentElement;
+    if(camPage){
+      const fallback=document.createElement('div');
+      fallback.style.cssText='padding:18px;background:var(--bg2);border-bottom:var(--brd)';
+      fallback.innerHTML=`<div style="background:var(--bg3);border:1.5px solid var(--au);border-radius:var(--r10);padding:16px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--au);font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">⚠️ Modo Manual Disponível</div>
+        <div style="font-size:12px;color:var(--c1);margin-bottom:12px;line-height:1.6">Sem acesso ao modelo de IA. Insira as medidas manualmente.</div>
+        <button onclick="openManualEntry()" style="background:linear-gradient(135deg,var(--au),var(--aum));color:#0e0b05;border:none;border-radius:var(--r10);padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%">📝 Inserir Medidas Manualmente</button>
+      </div>`;
+      camPage.insertBefore(fallback,camPage.firstChild);
+    }
+  }
+}
+
+function openManualEntry(){
+  const modal=document.createElement('div');
+  modal.id='manualModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML=`<div style="background:var(--bg2);border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-top:2px solid var(--au)">
+    <div style="padding:18px;display:flex;align-items:center;justify-content:space-between;border-bottom:var(--brd)">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--tx)">📝 Medidas Manuais</div>
+      <button onclick="document.getElementById('manualModal').remove()" style="background:var(--bg3);border:var(--brd);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--c2);display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[['mnDNPOD','DNP OD (mm)','30','👁️'],['mnDNPOE','DNP OE (mm)','30','👁️'],['mnAlt','Altura Mont. (mm)','20','📏'],['mnDiam','Diâmetro Min. (mm)','65','🔭'],['mnAng','Ângulo Panto. (°)','8','📐'],['mnDCV','DCV (mm)','12','🎯'],['mnLarg','Larg. Aro (mm)','52','↔️'],['mnHalt','Alt. Aro (mm)','32','↕️']].map(([id,lbl,ph,ic])=>`
+          <div>
+            <label style="font-size:9px;font-weight:700;color:var(--c2);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px">${ic} ${lbl}</label>
+            <input id="${id}" type="number" placeholder="${ph}" step="0.5" style="width:100%;padding:10px;border:1.5px solid var(--c3);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;outline:none;background:var(--bg3);text-align:center;color:var(--tx)" onfocus="this.style.borderColor='var(--au)'" onblur="this.style.borderColor='var(--c3)'">
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:14px">
+        <label style="font-size:9px;font-weight:700;color:var(--c2);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px">👤 Nome do Cliente</label>
+        <input id="mnClient" placeholder="Nome do cliente" style="width:100%;padding:11px;border:1.5px solid var(--c3);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:var(--bg3);color:var(--tx)" onfocus="this.style.borderColor='var(--au)'" onblur="this.style.borderColor='var(--c3)'">
+      </div>
+      <button onclick="applyManualEntry()" style="background:linear-gradient(135deg,var(--au),var(--aum));color:#0e0b05;border:none;border-radius:var(--r10);padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:14px">✅ Aplicar e Ver Resultado</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function applyManualEntry(){
+  const g=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const dnpOD=g('mnDNPOD')||30,dnpOE=g('mnDNPOE')||30;
+  measurements={dnpOD,dnpOE,dnpTot:dnpOD+dnpOE,alt:g('mnAlt')||20,diam:g('mnDiam')||65,angPant:g('mnAng')||8,dcv:g('mnDCV')||12,largAro:g('mnLarg')||52,altAro:g('mnHalt')||32};
+  const clientName=document.getElementById('mnClient')?.value?.trim();
+  if(clientName) document.getElementById('cfName').value=clientName;
+  document.getElementById('manualModal')?.remove();
+  goStep(2);toast('📝 Medidas manuais aplicadas!');
+}
+
+// INIT
+initModelRow();
+$('resBadgeDate').textContent=new Date().toLocaleDateString('pt-BR');
+setTimeout(()=>{
+  $('splash').classList.add('out');
+  setTimeout(()=>{$('app').classList.add('on');setTimeout(checkMediaPipeReady,2000);},400);
+},2400);
+</script>
+</body>
+</html>

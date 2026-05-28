@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#1a1209">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GAD'S Ótica">
+<meta name="description" content="GAD'S Ótica — Óculos de grau, sol e lentes de contato. Araçá, Imbiribeira, Recife-PE.">
+<meta property="og:title" content="GAD'S Ótica">
+<meta property="og:description" content="Óculos de grau, sol e lentes de contato em Recife. Experimente virtualmente!">
+<meta property="og:type" content="website">
+<title>GAD'S Ótica</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0b05;--bg2:#18120a;--bg3:#231a0d;
+  --au:#c9922a;--aum:#e5a83a;--aul:#f5c95e;--aup:#2a1e08;--aux:#f9e9c0;
+  --w:#fff;--tx:#f5ead8;--c1:#c9b89a;--c2:#9a8268;--c3:#5a4a38;
+  --gr:#25D366;--r:#d63031;
+  --r10:10px;--r16:16px;--r20:20px;
+  --sh:0 4px 24px rgba(201,146,42,.12);--shlg:0 10px 44px rgba(201,146,42,.22);
+  --brd:1px solid rgba(201,146,42,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden}
+
+/* ═══ SPLASH ═══ */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s,transform .8s}
+#splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+.spl-ring{width:90px;height:90px;border-radius:50%;border:2px solid rgba(201,146,42,.15);position:relative;margin-bottom:28px;animation:ring-spin 8s linear infinite}
+.spl-ring::before{content:'';position:absolute;inset:5px;border-radius:50%;border:1.5px solid rgba(201,146,42,.3);animation:ring-spin 4s linear infinite reverse}
+.spl-ring::after{content:'👓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px}
+@keyframes ring-spin{to{transform:rotate(360deg)}}
+.spl-logo{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,14vw,80px);font-weight:700;letter-spacing:.22em;color:var(--au);text-shadow:0 0 40px rgba(201,146,42,.4);animation:fu 1s ease .3s both}
+.spl-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.5em;color:var(--c2);text-transform:uppercase;margin-top:6px;animation:fu .8s ease .6s both}
+.spl-dots{display:flex;gap:9px;margin-top:26px;animation:fu .6s ease .9s both}
+.spl-dots span{width:8px;height:8px;border-radius:50%;background:var(--au);animation:bl 1.3s ease infinite}
+.spl-dots span:nth-child(2){animation-delay:.2s;background:var(--aum);opacity:.7}
+.spl-dots span:nth-child(3){animation-delay:.4s;background:var(--aul);opacity:.4}
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bl{0%,80%,100%{transform:scale(.45);opacity:.25}40%{transform:scale(1);opacity:1}}
+
+/* ═══ APP SHELL ═══ */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.on{display:flex}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--bg3);border:var(--brd);color:var(--tx);padding:11px 22px;border-radius:50px;font-size:13px;font-weight:500;z-index:9000;opacity:0;transition:all .3s;white-space:nowrap;box-shadow:var(--shlg);max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═══ NAV ═══ */
+.nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:rgba(14,11,5,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:var(--brd)}
+.nav-logo{display:flex;flex-direction:column;cursor:pointer}
+.nav-logo-main{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;letter-spacing:.28em;color:var(--au);line-height:1}
+.nav-logo-sub{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--c2);text-transform:uppercase;margin-top:2px}
+.nav-r{display:flex;gap:7px;align-items:center}
+.nib{background:rgba(201,146,42,.1);border:var(--brd);cursor:pointer;color:var(--au);font-size:17px;position:relative;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nib:hover,.nib:active{background:rgba(201,146,42,.22);transform:scale(1.06)}
+.nbg{position:absolute;top:-3px;right:-3px;background:var(--r);color:#fff;font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;border:2px solid var(--bg)}
+.gold-stripe{height:3px;background:linear-gradient(90deg,var(--bg) 0%,var(--c3) 15%,var(--au) 40%,var(--aul) 60%,var(--au) 80%,var(--c3) 88%,var(--bg) 100%)}
+
+/* ═══ TABBAR ═══ */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:rgba(14,11,5,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:var(--brd);padding-bottom:env(safe-area-inset-bottom,6px)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 6px;cursor:pointer;gap:3px;border:none;background:none;color:var(--c3);transition:color .2s}
+.tab.on{color:var(--au)}
+.tab.on .tw{background:var(--aup)}
+.tw{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.ti{font-size:18px}.tl{font-size:8.5px;letter-spacing:.06em;font-family:'JetBrains Mono',monospace;text-transform:uppercase;font-weight:700;margin-top:1px}
+
+/* ═══ PAGES ═══ */
+.pg{display:none;flex:1;padding-bottom:82px}
+.pg.on{display:block;animation:pi .3s ease}
+@keyframes pi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ PROMO BAR ═══ */
+.promo{background:linear-gradient(90deg,var(--aup),var(--bg3),var(--aup));color:var(--aul);text-align:center;padding:7px 14px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;overflow:hidden;white-space:nowrap;border-bottom:var(--brd)}
+.promo-inner{display:inline-block;animation:marquee 22s linear infinite}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ═══ HERO ═══ */
+.hero{position:relative;background:var(--bg);padding:50px 22px 42px;overflow:hidden;min-height:68vh;display:flex;flex-direction:column;justify-content:flex-end}
+.hero-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hero-bg::before{content:'';position:absolute;top:-120px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.12) 0%,transparent 70%)}
+.hero-bg::after{content:'';position:absolute;bottom:60px;left:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.06) 0%,transparent 70%)}
+.hero-eyeglass{position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);font-size:clamp(80px,28vw,160px);opacity:.07;pointer-events:none;animation:float 7s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(-50%,-54%) rotate(-2deg)}50%{transform:translate(-50%,-58%) rotate(2deg) translateY(-8px)}}
+.hbadge{display:inline-flex;align-items:center;gap:7px;background:rgba(201,146,42,.1);border:var(--brd);border-radius:50px;padding:5px 15px;margin-bottom:14px;font-size:10px;font-weight:600;color:var(--aul);letter-spacing:.14em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.hbd{width:7px;height:7px;border-radius:50%;background:var(--au);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.htitle{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,13vw,80px);font-weight:700;line-height:1.02;color:var(--tx);margin-bottom:14px}
+.htitle em{font-style:italic;color:var(--au)}
+.hdesc{font-size:14px;color:var(--c1);line-height:1.7;max-width:300px;margin-bottom:28px}
+.hctas{display:flex;gap:11px;flex-wrap:wrap}
+
+/* ═══ BUTTONS ═══ */
+.btn{padding:13px 24px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .25s;border-radius:var(--r10);text-align:center;display:inline-block}
+.btn-g{background:linear-gradient(135deg,var(--au),var(--aum));color:#0e0b05;flex:1;box-shadow:0 4px 18px rgba(201,146,42,.35);font-weight:700}
+.btn-g:hover{box-shadow:0 6px 26px rgba(201,146,42,.5);transform:translateY(-1px)}
+.btn-o{background:transparent;color:var(--au);border:1.5px solid rgba(201,146,42,.4)}
+.btn-o:hover{border-color:var(--au);background:rgba(201,146,42,.08)}
+.btn-dk{background:var(--bg3);color:var(--tx);border:var(--brd)}
+.btn-gr{background:var(--gr);color:#fff}
+.btn-full{width:100%}
+
+/* ═══ STATS ═══ */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg2);border-bottom:var(--brd);border-top:var(--brd)}
+.si{padding:16px 10px;text-align:center;border-right:var(--brd)}
+.si:last-child{border-right:none}
+.sn{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--au);display:block}
+.sl2{font-size:8.5px;letter-spacing:.15em;color:var(--c2);text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-top:2px;display:block}
+
+/* ═══ SECTIONS ═══ */
+.sec{padding:30px 0 0}
+.sech{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 14px}
+.sect{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--tx)}
+.secl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--au);text-transform:uppercase;cursor:pointer;background:none;border:none;font-weight:700}
+
+/* ═══ CATEGORIES ═══ */
+.cats{display:flex;gap:11px;padding:0 18px;overflow-x:auto;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.catw{width:64px;height:64px;border-radius:16px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:24px;border:var(--brd);transition:all .24s}
+.cat.on .catw,.cat:hover .catw{border-color:var(--au);background:var(--aup);box-shadow:0 4px 16px rgba(201,146,42,.2)}
+.catn{font-size:10.5px;font-weight:600;color:var(--c1);text-align:center;transition:color .24s;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.cat.on .catn{color:var(--au)}
+
+/* ═══ PRODUCT GRID ═══ */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:0 15px}
+.pcard{background:var(--bg2);cursor:pointer;border-radius:var(--r16);overflow:hidden;border:var(--brd);transition:all .24s}
+.pcard:hover{box-shadow:var(--shlg);transform:translateY(-2px);border-color:rgba(201,146,42,.4)}
+.pimg{width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--bg3),var(--aup));display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden}
+.pbg{position:absolute;top:9px;left:9px;font-size:7.5px;font-weight:700;letter-spacing:.12em;padding:3px 9px;border-radius:50px;z-index:2;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.pbg.new{background:var(--au);color:#0e0b05}.pbg.sale{background:var(--r);color:#fff}
+.pinfo{padding:11px 13px 14px}
+.pname{font-size:12px;font-weight:600;line-height:1.4;margin-bottom:3px;color:var(--tx)}
+.psub{font-size:9.5px;color:var(--c2);font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+.prow{display:flex;align-items:center;justify-content:space-between}
+.ppr{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--au)}
+.padd{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--au),var(--aum));border:none;cursor:pointer;font-size:20px;color:#0e0b05;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700}
+.padd:hover{transform:scale(1.12);box-shadow:0 4px 14px rgba(201,146,42,.4)}
+
+/* ═══ RX UPLOAD ═══ */
+.rxbox{margin:0 15px 20px;border:1.5px dashed rgba(201,146,42,.3);border-radius:var(--r16);padding:20px;cursor:pointer;text-align:center;background:var(--bg2);transition:all .2s}
+.rxbox:hover,.rxbox.has-file{background:var(--aup);border-color:var(--au)}
+.rxi{font-size:32px;margin-bottom:6px;display:block}
+.rxt{font-size:13.5px;font-weight:600;color:var(--au);margin-bottom:3px}
+.rxs{font-size:11px;color:var(--c2)}
+.rxfn{font-size:11px;color:var(--aul);font-weight:600;margin-top:7px;word-break:break-all}
+
+/* ═══ AR BANNER ═══ */
+.arbanner{margin:24px 15px;background:linear-gradient(135deg,var(--bg3),var(--aup));border-radius:var(--r20);padding:24px 20px;position:relative;overflow:hidden;cursor:pointer;border:var(--brd);box-shadow:var(--shlg)}
+.arbanner::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.12) 0%,transparent 70%)}
+.art{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.3em;color:var(--aul);text-transform:uppercase;margin-bottom:6px;display:block;opacity:.7}
+.artt{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.artt em{font-style:italic;color:var(--au)}
+.ard{font-size:12.5px;color:var(--c1);line-height:1.6;margin-bottom:17px}
+.ari{font-size:40px;position:absolute;right:18px;top:18px;opacity:.5}
+
+/* ═══ LOCAL BANNER ═══ */
+.locbanner{margin:0 15px 24px;border-radius:var(--r20);overflow:hidden;border:var(--brd)}
+.lochead{background:linear-gradient(135deg,var(--bg3),#1e1508);padding:18px 20px;display:flex;align-items:center;gap:13px}
+.locbody{background:var(--bg2);padding:14px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.loctag{background:var(--aup);color:var(--aul);font-size:10.5px;font-weight:600;padding:5px 12px;border-radius:50px;border:var(--brd);font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+
+/* ═══ BRANDS ═══ */
+.brands{padding:26px 18px 0}
+.brow{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:3px}
+.brow::-webkit-scrollbar{display:none}
+.bl{flex-shrink:0;background:var(--bg2);border:var(--brd);border-radius:9px;padding:8px 15px;font-family:'Cormorant Garamond',serif;font-size:13.5px;font-weight:600;color:var(--c1);transition:all .2s;cursor:pointer}
+.bl:hover{border-color:var(--au);color:var(--au)}
+
+/* ═══ TESTIMONIALS ═══ */
+.tests{padding:26px 18px 0}
+.trow{display:flex;gap:13px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px 10px}
+.trow::-webkit-scrollbar{display:none}
+.tc{flex-shrink:0;width:220px;background:var(--bg2);border:var(--brd);border-radius:var(--r16);padding:16px}
+.tcs{color:var(--au);font-size:12px;margin-bottom:7px;letter-spacing:2px}
+.tct{font-size:12.5px;line-height:1.65;color:var(--c1);margin-bottom:10px;font-style:italic;font-family:'Cormorant Garamond',serif}
+.tca{font-size:12px;font-weight:600;color:var(--tx)}
+.tcc{font-size:9.5px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+
+/* ═══ CATALOG ═══ */
+.cath{padding:20px 18px 0;background:var(--bg);border-bottom:var(--brd);position:sticky;top:64px;z-index:50}
+.catt{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.cats2{font-size:12.5px;color:var(--c2);margin-bottom:14px}
+.sb{display:flex;align-items:center;background:var(--bg2);border:var(--brd);border-radius:50px;padding:10px 17px;gap:9px;margin-bottom:13px;transition:border-color .2s}
+.sb:focus-within{border-color:var(--au)}
+.sb input{background:none;border:none;color:var(--tx);font-size:13.5px;flex:1;outline:none;font-family:'DM Sans',sans-serif}
+.sb input::placeholder{color:var(--c3)}
+.ftabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:14px}
+.ftabs::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:6px 15px;border:var(--brd);border-radius:50px;font-size:11.5px;cursor:pointer;background:var(--bg2);color:var(--c1);transition:all .2s;font-family:'DM Sans',sans-serif;font-weight:600}
+.ftab.on{background:var(--au);color:#0e0b05;border-color:var(--au)}
+.ftab:hover:not(.on){border-color:var(--au);color:var(--au)}
+
+/* ═══ TRY-ON ═══ */
+.trypage{padding:18px;text-align:center;background:var(--bg);min-height:calc(100vh - 140px)}
+.trypt{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;margin-bottom:5px;color:var(--tx)}
+.trypt em{font-style:italic;color:var(--au)}
+.tryps{font-size:12.5px;color:var(--c2);margin-bottom:20px}
+.cam-wrap{position:relative;width:100%;max-width:340px;margin:0 auto 15px;border-radius:20px;overflow:hidden;background:#0e0b05;border:var(--brd);box-shadow:var(--shlg)}
+#vid{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;transform:scaleX(-1)}
+#cov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.cam-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg3)}
+.cam-ph-icon{font-size:44px;opacity:.4}
+.cam-ph-txt{font-size:12px;color:var(--c2)}
+.cc{position:absolute;width:20px;height:20px;border-color:var(--au);border-style:solid;border-width:0;z-index:3}
+.cc.tl{top:12px;left:12px;border-top-width:2px;border-left-width:2px;border-radius:4px 0 0 0}
+.cc.tr{top:12px;right:12px;border-top-width:2px;border-right-width:2px;border-radius:0 4px 0 0}
+.cc.bl{bottom:12px;left:12px;border-bottom-width:2px;border-left-width:2px;border-radius:0 0 0 4px}
+.cc.br{bottom:12px;right:12px;border-bottom-width:2px;border-right-width:2px;border-radius:0 0 4px 0}
+.cam-btns{display:flex;gap:8px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.trymt{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:12px;text-align:left}
+.trygrid{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+.trygrid::-webkit-scrollbar{display:none}
+.tryitem{flex-shrink:0;background:var(--bg2);border:var(--brd);border-radius:12px;padding:10px 14px;cursor:pointer;text-align:center;transition:all .2s;min-width:70px}
+.tryitem.on{background:var(--aup);border-color:var(--au)}
+.trythumb{font-size:22px;margin-bottom:4px}
+.tryname{font-size:9.5px;font-weight:600;color:var(--c1);font-family:'JetBrains Mono',monospace}
+.tryitem.on .tryname{color:var(--au)}
+
+/* ═══ PROFILE ═══ */
+.proph{background:linear-gradient(160deg,var(--bg3),var(--bg2));padding:24px 18px;border-bottom:var(--brd)}
+.propinfo{display:flex;align-items:center;gap:14px}
+.propav{width:60px;height:60px;border-radius:50%;background:var(--aup);display:flex;align-items:center;justify-content:center;font-size:26px;border:var(--brd);flex-shrink:0}
+.propn{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx)}
+.prope{font-size:12px;color:var(--c2);margin-top:2px}
+.propbody{padding:18px}
+.loycard{background:linear-gradient(135deg,#2a1e08,#1a1209);border-radius:var(--r16);padding:20px;margin-bottom:18px;border:1px solid rgba(201,146,42,.25);position:relative;overflow:hidden}
+.loycard::before{content:'';position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(201,146,42,.1) 0%,transparent 70%)}
+.loystripe{height:3px;background:linear-gradient(90deg,var(--au),var(--aul),var(--au));border-radius:2px;margin-bottom:13px}
+.loytag{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.2em;color:var(--c2);text-transform:uppercase;margin-bottom:7px}
+.loypts{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:700;color:var(--au);line-height:1}
+.loyptsl{font-size:11px;color:var(--c2);margin-bottom:12px}
+.loybar{height:5px;background:rgba(201,146,42,.15);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.loyfill{height:100%;width:62%;background:linear-gradient(90deg,var(--au),var(--aul));border-radius:3px}
+.loylvl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+.psect{margin-bottom:16px}
+.psectl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--au);text-transform:uppercase;font-weight:700;margin-bottom:9px;padding-bottom:7px;border-bottom:var(--brd)}
+.pitem{display:flex;align-items:center;justify-content:space-between;padding:12px 0;cursor:pointer;border-bottom:1px solid rgba(201,146,42,.08);transition:all .15s}
+.pitem:hover{padding-left:4px}
+.pil{display:flex;align-items:center;gap:11px}
+.piw{width:36px;height:36px;border-radius:9px;background:var(--aup);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.pitx{font-size:13.5px;color:var(--tx);font-weight:500}
+.piar{color:var(--c3);font-size:16px}
+
+/* ═══ PRODUCT DETAIL ═══ */
+.pdov{position:fixed;inset:0;background:var(--bg);z-index:500;overflow-y:auto;display:none;flex-direction:column}
+.pdov.on{display:flex;animation:pi .3s ease}
+.pdhd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(14,11,5,.92);backdrop-filter:blur(12px);position:sticky;top:0;border-bottom:var(--brd)}
+.pdbk{background:var(--bg2);border:var(--brd);color:var(--au);font-size:20px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.pdbk:hover{background:var(--aup)}
+.pdtit{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--tx);flex:1;margin:0 12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdimg{width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--bg3),var(--aup));display:flex;align-items:center;justify-content:center;font-size:90px}
+.pdinfo{padding:20px 18px 30px}
+.pdn{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.pdb{font-size:12px;color:var(--c2);font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+.pdp{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--au);margin-bottom:4px}
+.pdpc{font-size:12px;color:var(--c2);margin-bottom:14px}
+.pdtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.pdtag{background:var(--aup);color:var(--aul);font-size:10px;padding:4px 11px;border-radius:50px;border:var(--brd);font-family:'JetBrains Mono',monospace}
+.pddesc{font-size:13.5px;color:var(--c1);line-height:1.7;margin-bottom:18px}
+.pdvl{font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--c2);text-transform:uppercase;font-family:'JetBrains Mono',monospace;display:block;margin-bottom:9px}
+.pdvbs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.pdvb{padding:7px 15px;border:var(--brd);border-radius:50px;font-size:12px;cursor:pointer;background:var(--bg2);color:var(--c1);transition:all .2s}
+.pdvb.on,.pdvb:hover{background:var(--aup);border-color:var(--au);color:var(--au)}
+.pdacts{display:flex;gap:10px;margin-bottom:20px}
+
+/* ═══ CART ═══ */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.ov.on{display:flex;animation:oa .25s ease}
+@keyframes oa{from{opacity:0}to{opacity:1}}
+.sh{width:100%;max-height:88vh;background:var(--bg2);border-radius:22px 22px 0 0;overflow:hidden;display:flex;flex-direction:column;border-top:var(--brd)}
+.shh2{height:4px;width:44px;background:var(--c3);border-radius:2px;margin:10px auto 0}
+.shh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:var(--brd)}
+.shht{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--tx)}
+.shcl{background:var(--bg3);border:var(--brd);color:var(--c2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.shcl:hover{color:var(--tx);background:var(--aup);border-color:var(--au)}
+.shb{flex:1;overflow-y:auto;padding:14px 18px}
+.cem{text-align:center;padding:36px 0;color:var(--c2)}
+.shft{padding:14px 18px;border-top:var(--brd)}
+.tr{display:flex;justify-content:space-between;margin-bottom:13px}
+.trl{font-size:13px;color:var(--c2)}
+.trv{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--au)}
+.cit{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(201,146,42,.08)}
+.cie{font-size:28px;width:52px;height:52px;background:var(--bg3);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:var(--brd)}
+.cin{font-size:13px;font-weight:600;color:var(--tx);line-height:1.3;flex:1}
+.cis{font-size:11px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+.cip{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--au)}
+.ciqb{display:flex;align-items:center;gap:6px;margin-top:5px}
+.ciqbtn{background:var(--bg);border:var(--brd);color:var(--au);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ciqbtn:hover{background:var(--aup);border-color:var(--au)}
+.ciq{font-size:13px;font-weight:700;color:var(--tx);min-width:20px;text-align:center}
+.cirm{background:none;border:none;color:var(--c3);cursor:pointer;font-size:15px;padding:4px;transition:color .2s;margin-left:auto}
+.cirm:hover{color:var(--r)}
+
+/* ═══ PAYMENT ═══ */
+.payov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.payov.on{display:flex;animation:oa .25s ease}
+.paysh{width:100%;max-height:90vh;background:var(--bg2);border-radius:22px 22px 0 0;overflow-y:auto;border-top:var(--brd)}
+.payhd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:var(--brd);position:sticky;top:0;background:var(--bg2)}
+.payht{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx)}
+.paymt{padding:14px 18px;display:flex;flex-direction:column;gap:9px}
+.pm{display:flex;align-items:center;gap:13px;padding:13px 15px;background:var(--bg3);border-radius:var(--r10);cursor:pointer;border:var(--brd);transition:all .2s}
+.pm.on{background:var(--aup);border-color:var(--au)}
+.pmic{font-size:22px;width:36px;text-align:center;flex-shrink:0}
+.pmn{font-size:13.5px;font-weight:600;color:var(--tx)}
+.pms{font-size:11px;color:var(--c2);margin-top:1px}
+.pmck{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--c3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--au);margin-left:auto;flex-shrink:0;transition:all .2s}
+.pm.on .pmck{background:var(--au);border-color:var(--au);color:#0e0b05}
+.payform{padding:0 18px 14px;display:none}
+.pfl{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--c2);text-transform:uppercase;font-family:'JetBrains Mono',monospace;display:block;margin-bottom:5px;margin-top:10px}
+.pfi{width:100%;padding:12px 15px;background:var(--bg3);border:var(--brd);border-radius:var(--r10);color:var(--tx);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.pfi:focus{border-color:var(--au)}
+.pfrow{display:flex;gap:10px}
+.pfrow .pfi{flex:1}
+.psr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(201,146,42,.08);font-size:13px;color:var(--c1)}
+#payBtn{margin:14px 18px;width:calc(100% - 36px)}
+.pix-box{margin:14px 18px;background:var(--bg3);border:var(--brd);border-radius:var(--r16);padding:18px;text-align:center}
+.pix-qr{font-size:80px;margin-bottom:10px}
+.pix-key{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--au);word-break:break-all;margin-bottom:12px;cursor:pointer}
+
+/* ═══ AUTH ═══ */
+.authov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:800;display:none;align-items:flex-end;backdrop-filter:blur(6px)}
+.authov.on{display:flex;animation:oa .25s ease}
+.authsh{width:100%;max-height:88vh;background:var(--bg2);border-radius:22px 22px 0 0;overflow-y:auto;border-top:var(--brd)}
+.authhd{padding:18px;border-bottom:var(--brd);display:flex;align-items:center;justify-content:space-between}
+.authts{display:flex;background:var(--bg3);border-radius:50px;padding:4px;gap:4px;margin:14px 18px}
+.atab{flex:1;padding:9px;border-radius:50px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--c2);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.atab.on{background:var(--au);color:#0e0b05}
+.authform{padding:0 18px 20px;display:flex;flex-direction:column;gap:0}
+
+/* ═══ SUCCESS ═══ */
+.sucov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(8px)}
+.sucov.on{display:flex;animation:fu .4s ease}
+.sucbox{background:var(--bg2);border:var(--brd);border-radius:22px;padding:32px 26px;max-width:320px;width:90%;text-align:center;box-shadow:var(--shlg)}
+.suci{font-size:56px;margin-bottom:14px}
+.suct{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.subs{font-size:13px;color:var(--c1);line-height:1.65;margin-bottom:18px}
+.succ{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--au);background:var(--aup);border-radius:7px;padding:8px 12px;display:inline-block;margin-bottom:18px;border:var(--brd)}
+
+/* ═══ HORARIO WIDGET ═══ */
+.hw{margin:24px 15px 0;background:var(--bg2);border-radius:var(--r16);border:var(--brd);overflow:hidden}
+.hwh{padding:14px 18px;background:var(--bg3);border-bottom:var(--brd);display:flex;align-items:center;gap:10px}
+.hwi{font-size:20px}
+.hwt{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--tx)}
+.hws{font-size:11px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+.hrow{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(201,146,42,.06)}
+.hrow:last-child{border-bottom:none}
+.hday{font-size:12.5px;color:var(--c1);font-weight:500}
+.hhour{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--c2)}
+.hrow.today .hday{color:var(--au);font-weight:700}
+.hrow.today .hhour{color:var(--aum)}
+.hbadge2{font-size:9px;background:rgba(37,211,102,.15);color:#25D366;padding:2px 8px;border-radius:50px;font-family:'JetBrains Mono',monospace;border:1px solid rgba(37,211,102,.3)}
+.hbadge2.closed{background:rgba(214,48,49,.12);color:#d63031;border-color:rgba(214,48,49,.25)}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="spl-ring"></div>
+  <div class="spl-logo">GAD'S</div>
+  <div class="spl-sub">Ótica · Araçá · Recife</div>
+  <div class="spl-dots"><span></span><span></span><span></span></div>
+</div>
+
+<div id="app">
+  <div id="toast"></div>
+
+  <!-- ══ NAV ══ -->
+  <nav class="nav">
+    <div class="nav-logo" onclick="goTab('home')">
+      <div class="nav-logo-main">GAD'S</div>
+      <div class="nav-logo-sub">Ótica · Imbiribeira</div>
+    </div>
+    <div class="nav-r">
+      <button class="nib" onclick="openWA()" title="WhatsApp">💬</button>
+      <button class="nib" onclick="openCart()">🛒<span class="nbg" id="cartBadge">0</span></button>
+    </div>
+  </nav>
+  <div class="gold-stripe"></div>
+
+  <!-- ══ HOME ══ -->
+  <div class="pg on" id="pg-home">
+    <div class="promo">
+      <span class="promo-inner">✨ GAD'S Ótica Araçá — Óculos de grau, sol e lentes de contato &nbsp;&nbsp;·&nbsp;&nbsp; 📍 Rua Arq. Luiz Nunes, 873 – Imbiribeira, Recife &nbsp;&nbsp;·&nbsp;&nbsp; 📱 (81) 99782-1384 &nbsp;&nbsp;·&nbsp;&nbsp; Seg–Sex 9h–17h30 · Sáb 9h–12h &nbsp;&nbsp;·&nbsp;&nbsp; ✨ GAD'S Ótica Araçá — Óculos de grau, sol e lentes de contato &nbsp;&nbsp;·&nbsp;&nbsp; 📍 Rua Arq. Luiz Nunes, 873 – Imbiribeira, Recife &nbsp;&nbsp;·&nbsp;&nbsp; 📱 (81) 99782-1384 &nbsp;&nbsp;·&nbsp;&nbsp; Seg–Sex 9h–17h30 · Sáb 9h–12h &nbsp;&nbsp;·&nbsp;&nbsp;</span>
+    </div>
+
+    <div class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-eyeglass">👓</div>
+      <div class="hbadge"><div class="hbd"></div>Coleção 2025 · Imbiribeira</div>
+      <h1 class="htitle">Enxergar o mundo<br>com <em>elegância</em></h1>
+      <p class="hdesc">Óculos de grau, sol e lentes de contato. Atendimento especializado no coração do Araçá, Recife.</p>
+      <div class="hctas">
+        <button class="btn btn-g" onclick="goTab('catalog')">Ver Coleção</button>
+        <button class="btn btn-o" onclick="goTab('tryon')">Experimentar AR</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="si"><span class="sn">400+</span><span class="sl2">Modelos</span></div>
+      <div class="si"><span class="sn">15+</span><span class="sl2">Anos</span></div>
+      <div class="si"><span class="sn">★ 4.8</span><span class="sl2">Avaliação</span></div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h2 class="sect">Categorias</h2><button class="secl" onclick="goTab('catalog')">Ver todas →</button></div>
+      <div class="cats" id="homecats">
+        <div class="cat on" onclick="fcHome(this,'todos')"><div class="catw">🕶️</div><span class="catn">Todos</span></div>
+        <div class="cat" onclick="fcHome(this,'sol')"><div class="catw">☀️</div><span class="catn">Sol</span></div>
+        <div class="cat" onclick="fcHome(this,'grau')"><div class="catw">👓</div><span class="catn">Grau</span></div>
+        <div class="cat" onclick="fcHome(this,'lentes')"><div class="catw">👁️</div><span class="catn">Lentes</span></div>
+        <div class="cat" onclick="fcHome(this,'infantil')"><div class="catw">🧒</div><span class="catn">Infantil</span></div>
+        <div class="cat" onclick="fcHome(this,'acessorios')"><div class="catw">🧴</div><span class="catn">Acessórios</span></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h2 class="sect">Destaques</h2><button class="secl" onclick="goTab('catalog')">Ver mais →</button></div>
+      <div class="pgrid" id="homeProds"></div>
+    </div>
+
+    <div style="padding:26px 0 0">
+      <div class="rxbox" id="rxHome" onclick="trigRx('rxFHome')">
+        <input type="file" id="rxFHome" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleRx(this,'rxHome')">
+        <span class="rxi">📋</span>
+        <div class="rxt">Envie sua receita médica</div>
+        <div class="rxs">Toque para anexar PDF ou foto da receita</div>
+        <div class="rxfn" id="rxHomeLbl"></div>
+      </div>
+    </div>
+
+    <div class="arbanner" onclick="goTab('tryon')">
+      <span class="ari">🤳</span>
+      <span class="art">Novidade · Realidade Aumentada</span>
+      <h3 class="artt">Experimente <em>virtualmente</em></h3>
+      <p class="ard">Veja os óculos no seu rosto antes de comprar, diretamente pelo celular.</p>
+      <button class="btn btn-g" style="max-width:200px;flex:none">Experimentar Agora</button>
+    </div>
+
+    <div class="arbanner" style="background:linear-gradient(135deg,#0d1a12,#0f2a18);border-color:rgba(37,211,102,.2);margin-top:0" onclick="window.open('https://wa.me/5581997821384?text=Olá!%20Gostaria%20de%20agendar%20um%20exame%20de%20vista.','_blank')">
+      <span class="ari" style="opacity:.4">🏥</span>
+      <span class="art" style="color:#4ade80">Serviço · Exame de Vista</span>
+      <h3 class="artt" style="color:#e2ffe9">Agende seu exame <em style="color:#25D366">grátis</em></h3>
+      <p class="ard" style="color:rgba(226,255,233,.65)">Exame optométrico completo com nosso especialista. Agende pelo WhatsApp agora.</p>
+      <button class="btn btn-gr" style="max-width:210px;flex:none">Agendar pelo WhatsApp</button>
+    </div>
+
+    <!-- TOMADOR DE MEDIDAS BANNER -->
+    <div class="arbanner" style="background:linear-gradient(135deg,#0d0f1a,#0f1228);border-color:rgba(116,185,255,.22);margin-top:0" onclick="window.location.href='medidas.html'">
+      <span class="ari" style="opacity:.35">📐</span>
+      <span class="art" style="color:#a8c4f5">Ferramenta Óptica · Tecnologia AR</span>
+      <h3 class="artt" style="color:#e8f0ff">Tomador de <em style="color:#74b9ff">Medidas</em> Digital</h3>
+      <p class="ard" style="color:rgba(232,240,255,.65)">Capture DNP, Altura de Montagem, Diâmetro Mínimo e mais — direto pela câmera, com precisão clínica.</p>
+      <button class="btn" style="background:linear-gradient(135deg,#4a90d9,#74b9ff);color:#fff;max-width:220px;flex:none;font-weight:700">📐 Abrir Tomador de Medidas</button>
+    </div>
+
+    <!-- HORÁRIO -->
+    <div class="hw">
+      <div class="hwh">
+        <span class="hwi">🕐</span>
+        <div>
+          <div class="hwt">Horário de Funcionamento</div>
+          <div class="hws" id="statusNow">—</div>
+        </div>
+      </div>
+      <div class="hrow" id="hr-0"><span class="hday">Segunda-feira</span><span class="hhour">09:00 – 17:30</span></div>
+      <div class="hrow" id="hr-1"><span class="hday">Terça-feira</span><span class="hhour">09:00 – 17:30</span></div>
+      <div class="hrow" id="hr-2"><span class="hday">Quarta-feira</span><span class="hhour">09:00 – 17:30</span></div>
+      <div class="hrow" id="hr-3"><span class="hday">Quinta-feira</span><span class="hhour">09:00 – 17:30</span></div>
+      <div class="hrow" id="hr-4"><span class="hday">Sexta-feira</span><span class="hhour">09:00 – 17:30</span></div>
+      <div class="hrow" id="hr-5"><span class="hday">Sábado</span><span class="hhour">09:00 – 12:00</span></div>
+      <div class="hrow" id="hr-6"><span class="hday">Domingo</span><span class="hhour" style="color:var(--r)">Fechado</span></div>
+    </div>
+
+    <div style="height:8px"></div>
+
+    <div class="locbanner" style="margin-top:24px">
+      <div class="lochead">
+        <span style="font-size:32px">📍</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--tx)">GAD'S Ótica — Araçá</div>
+          <div style="font-size:12px;color:var(--c2);margin-top:2px">Rua Arq. Luiz Nunes, 873 · Imbiribeira, Recife-PE</div>
+        </div>
+      </div>
+      <div class="locbody">
+        <span class="loctag" onclick="openMaps()" style="cursor:pointer">🗺️ Ver no Mapa</span>
+        <span class="loctag" onclick="openWA()" style="cursor:pointer">💬 WhatsApp</span>
+        <span class="loctag">🚗 Estacionamento</span>
+        <span class="loctag">♿ Acessível</span>
+      </div>
+    </div>
+
+    <div class="brands" style="margin-bottom:10px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--tx);margin-bottom:13px">Marcas Disponíveis</div>
+      <div class="brow">
+        <div class="bl">Ray-Ban</div><div class="bl">Oakley</div><div class="bl">Prada</div>
+        <div class="bl">Guess</div><div class="bl">Calvin Klein</div><div class="bl">Hb2</div>
+        <div class="bl">Mormaii</div><div class="bl">Ana Hickmann</div><div class="bl">Grazi</div>
+      </div>
+    </div>
+
+    <div class="tests" style="margin-bottom:10px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx);margin-bottom:14px">O que nossos clientes dizem</div>
+      <div class="trow">
+        <div class="tc"><div class="tcs">★★★★★</div><p class="tct">"Atendimento excelente! Me ajudaram muito na escolha dos óculos de grau. Voltarei sempre!"</p><div class="tca">Fernanda Lima</div><div class="tcc">Imbiribeira, Recife</div></div>
+        <div class="tc"><div class="tcs">★★★★★</div><p class="tct">"A qualidade das lentes é incrível. Loja muito organizada e o pessoal é super atencioso."</p><div class="tca">Roberto Alves</div><div class="tcc">Afogados, Recife</div></div>
+        <div class="tc"><div class="tcs">★★★★★</div><p class="tct">"Enviei minha receita pelo app e recebi orientação rápida. Ótimo serviço!"</p><div class="tca">Marcia Santos</div><div class="tcc">Boa Viagem, Recife</div></div>
+        <div class="tc"><div class="tcs">★★★★★</div><p class="tct">"Comprei óculos de sol para toda a família. Preço justo e ótima variedade de modelos!"</p><div class="tca">Paulo Medeiros</div><div class="tcc">Prazeres, Recife</div></div>
+      </div>
+    </div>
+    <div style="height:36px"></div>
+  </div>
+
+  <!-- ══ CATALOG ══ -->
+  <div class="pg" id="pg-catalog">
+    <div class="cath">
+      <h1 class="catt">Catálogo</h1>
+      <p class="cats2">Encontre o par perfeito</p>
+      <div class="sb"><span style="color:var(--au);font-size:15px">🔍</span><input type="text" placeholder="Buscar óculos..." id="searchIn" oninput="filterSearch()"></div>
+      <div class="ftabs">
+        <button class="ftab on" onclick="setFil(this,'todos')">Todos</button>
+        <button class="ftab" onclick="setFil(this,'sol')">☀️ Sol</button>
+        <button class="ftab" onclick="setFil(this,'grau')">👓 Grau</button>
+        <button class="ftab" onclick="setFil(this,'lentes')">👁️ Lentes</button>
+        <button class="ftab" onclick="setFil(this,'infantil')">🧒 Infantil</button>
+        <button class="ftab" onclick="setFil(this,'acetato')">Acetato</button>
+        <button class="ftab" onclick="setFil(this,'metal')">Metal</button>
+      </div>
+    </div>
+    <div style="padding:14px 0"><div class="pgrid" id="allProds"></div></div>
+  </div>
+
+  <!-- ══ TRY-ON ══ -->
+  <div class="pg" id="pg-tryon">
+    <div class="trypage">
+      <h1 class="trypt">Prova <em>Virtual</em></h1>
+      <p class="tryps">Experimente os óculos com sua câmera frontal em tempo real</p>
+
+      <!-- LINK PARA TOMADOR DE MEDIDAS -->
+      <div style="background:linear-gradient(135deg,#0d0f1a,#0f1228);border:1px solid rgba(116,185,255,.25);border-radius:16px;padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left" onclick="window.location.href='medidas.html'">
+        <span style="font-size:30px;flex-shrink:0">📐</span>
+        <div style="flex:1">
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.2em;color:#a8c4f5;text-transform:uppercase;margin-bottom:3px">Ferramenta Óptica</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:#e8f0ff;margin-bottom:2px">Tomador de <em style="color:#74b9ff">Medidas</em> Digital</div>
+          <div style="font-size:11.5px;color:rgba(232,240,255,.6)">DNP · Altura · Diâmetro · Ângulo · DCV</div>
+        </div>
+        <span style="color:#74b9ff;font-size:20px">›</span>
+      </div>
+
+      <div class="cam-wrap" id="camWrap">
+        <video id="vid" autoplay playsinline muted style="display:none"></video>
+        <canvas id="cov"></canvas>
+        <div class="cc tl"></div><div class="cc tr"></div><div class="cc bl"></div><div class="cc br"></div>
+        <div class="cam-ph" id="camPh">
+          <div class="cam-ph-icon">📷</div>
+          <div class="cam-ph-txt">Ative a câmera para experimentar</div>
+        </div>
+      </div>
+
+      <div class="cam-btns">
+        <button class="btn btn-g" id="camBtn" onclick="toggleCam()">📷 Ativar Câmera</button>
+        <button class="btn btn-dk" id="snapBtn" onclick="snapPhoto()" disabled>📸 Foto</button>
+        <button class="btn btn-dk" id="shareBtn" onclick="sharePhoto()" disabled>↗ Compartilhar</button>
+      </div>
+
+      <div style="text-align:left">
+        <div class="trymt">Escolha o modelo</div>
+        <div class="trygrid" id="tryGrid"></div>
+      </div>
+
+      <div style="margin-top:22px">
+        <div class="rxbox" id="rxTry" onclick="trigRx('rxFTry')">
+          <input type="file" id="rxFTry" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleRx(this,'rxTry')">
+          <span class="rxi">📤</span>
+          <div class="rxt">Enviar Receita ao Especialista</div>
+          <div class="rxs">Após experimentar, envie sua receita para indicação personalizada</div>
+          <div class="rxfn" id="rxTryLbl"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROFILE ══ -->
+  <div class="pg" id="pg-profile">
+    <div class="proph">
+      <div class="propinfo">
+        <div class="propav" id="userAv">👤</div>
+        <div>
+          <div class="propn" id="userName">Visitante</div>
+          <div class="prope" id="userEmail">Faça login para acessar</div>
+        </div>
+      </div>
+    </div>
+    <div class="propbody">
+      <div id="guestBtns" style="margin-bottom:20px;display:flex;gap:11px">
+        <button class="btn btn-g" style="flex:1" onclick="openAuth('login')">Entrar</button>
+        <button class="btn btn-o" style="flex:1" onclick="openAuth('reg')">Cadastrar</button>
+      </div>
+      <div id="logBtns" style="margin-bottom:20px;display:none">
+        <button class="btn btn-dk" style="color:var(--r);border-color:rgba(214,48,49,.3)" onclick="doLogout()">Sair da conta</button>
+      </div>
+
+      <div class="loycard">
+        <div class="loystripe"></div>
+        <div class="loytag">Programa de Fidelidade · GAD'S Club</div>
+        <div class="loypts" id="loyPts">750</div>
+        <div class="loyptsl">pontos acumulados</div>
+        <div class="loybar"><div class="loyfill"></div></div>
+        <div class="loylvl"><span>🥉 Bronze</span><span>🥈 Prata: 1.500pts</span></div>
+      </div>
+
+      <div class="psect">
+        <div class="psectl">Minha Conta</div>
+        <div class="pitem" onclick="toast('📦 Nenhum pedido ainda')"><div class="pil"><div class="piw">📦</div><span class="pitx">Meus Pedidos</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="toast('❤️ Favoritos em breve!')"><div class="pil"><div class="piw">❤️</div><span class="pitx">Favoritos</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="trigRx('rxFProf')">
+          <input type="file" id="rxFProf" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleRxProf(this)">
+          <div class="pil"><div class="piw">📋</div><span class="pitx">Minhas Receitas</span></div><span class="piar">›</span>
+        </div>
+        <div class="pitem" onclick="goTab('tryon')"><div class="pil"><div class="piw" style="background:var(--aup)">🤳</div><span class="pitx">Prova Virtual AR</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="window.location.href='medidas.html'"><div class="pil"><div class="piw" style="background:rgba(74,144,217,.15);border:1px solid rgba(74,144,217,.3)">📐</div><span class="pitx">Tomador de Medidas Digital</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="toast('📍 Endereços em breve!')"><div class="pil"><div class="piw">📍</div><span class="pitx">Meus Endereços</span></div><span class="piar">›</span></div>
+      </div>
+
+      <div class="psect">
+        <div class="psectl">Suporte & Contato</div>
+        <div class="pitem" onclick="openWA()"><div class="pil"><div class="piw">💬</div><span class="pitx">(81) 99782-1384 — WhatsApp</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="openMaps()"><div class="pil"><div class="piw">🏪</div><span class="pitx">Rua Arq. Luiz Nunes, 873 — Araçá</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="window.open('https://instagram.com/oticagads','_blank')"><div class="pil"><div class="piw">📸</div><span class="pitx">@oticagads no Instagram</span></div><span class="piar">›</span></div>
+        <div class="pitem" onclick="toast('⏰ Seg–Sex: 9h–17h30 · Sáb: 9h–12h')"><div class="pil"><div class="piw">🕐</div><span class="pitx">Horário de Atendimento</span></div><span class="piar">›</span></div>
+      </div>
+
+      <div style="padding:8px 0 16px;text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--au);letter-spacing:.1em">GAD'S Ótica</div>
+        <div style="font-size:10px;color:var(--c3);font-family:'JetBrains Mono',monospace;letter-spacing:.15em;margin-top:3px">ARAÇÁ · IMBIRIBEIRA · RECIFE-PE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABBAR -->
+  <nav class="tabs">
+    <button class="tab on" id="tab-home" onclick="goTab('home')"><div class="tw"><span class="ti">🏠</span></div><span class="tl">Início</span></button>
+    <button class="tab" id="tab-catalog" onclick="goTab('catalog')"><div class="tw"><span class="ti">🕶️</span></div><span class="tl">Catálogo</span></button>
+    <button class="tab" id="tab-tryon" onclick="goTab('tryon')"><div class="tw"><span class="ti">🤳</span></div><span class="tl">Experimentar</span></button>
+    <button class="tab" id="tab-profile" onclick="goTab('profile')"><div class="tw"><span class="ti">👤</span></div><span class="tl">Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ══ PRODUCT DETAIL ══ -->
+<div class="pdov" id="pdOv">
+  <div class="pdhd">
+    <button class="pdbk" onclick="closePD()">←</button>
+    <span class="pdtit" id="pdTit">Detalhes</span>
+    <button class="nib" onclick="openCart()">🛒<span class="nbg" id="pdBadge">0</span></button>
+  </div>
+  <div class="pdimg" id="pdImg">🕶️</div>
+  <div class="pdinfo">
+    <div class="pdn" id="pdName"></div>
+    <div class="pdb" id="pdBrand"></div>
+    <div class="pdp" id="pdPrice"></div>
+    <div class="pdpc" id="pdParcel"></div>
+    <div class="pdtags" id="pdTags"></div>
+    <div class="pddesc" id="pdDesc"></div>
+    <span class="pdvl">Cor / Variante</span>
+    <div class="pdvbs" id="pdVars"></div>
+    <div class="pdacts">
+      <button class="btn btn-g" style="flex:1" onclick="addFromPD()">🛒 Adicionar ao Carrinho</button>
+      <button class="btn btn-o" onclick="openWA()">💬</button>
+    </div>
+    <div class="rxbox" id="rxPD" onclick="trigRx('rxFPD')">
+      <input type="file" id="rxFPD" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleRx(this,'rxPD')">
+      <span class="rxi">📋</span>
+      <div class="rxt">Precisa de receita?</div>
+      <div class="rxs">Anexe aqui — nosso óptico analisa e indica a lente ideal</div>
+      <div class="rxfn" id="rxPDLbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CART ══ -->
+<div class="ov" id="cartOv" onclick="if(event.target===this)closeCart()">
+  <div class="sh">
+    <div class="shh2"></div>
+    <div class="shh"><div class="shht">Carrinho 🛒</div><button class="shcl" onclick="closeCart()">✕</button></div>
+    <div class="shb" id="cartBody">
+      <div class="cem"><span style="font-size:48px;display:block;margin-bottom:10px">🛒</span><p style="color:var(--c2)">Seu carrinho está vazio</p></div>
+    </div>
+    <div class="shft">
+      <div class="tr"><span class="trl">Total</span><span class="trv" id="cartTotal">R$ 0,00</span></div>
+      <button class="btn btn-g btn-full" onclick="openPay()">💳 Ir para Pagamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAYMENT ══ -->
+<div class="payov" id="payOv" onclick="if(event.target===this)closePay()">
+  <div class="paysh">
+    <div class="payhd">
+      <div class="payht">Pagamento 💳</div>
+      <button class="shcl" onclick="closePay()">✕</button>
+    </div>
+    <div class="paysum" id="paySumary" style="padding:14px 18px 0"></div>
+    <div class="paymt">
+      <div class="pm on" id="pm-card" onclick="selPM('card')">
+        <span class="pmic">💳</span>
+        <div><div class="pmn">Cartão de Crédito</div><div class="pms">Visa, Master, Elo, Amex — até 10x sem juros</div></div>
+        <div class="pmck">✓</div>
+      </div>
+      <div class="pm" id="pm-pix" onclick="selPM('pix')">
+        <span class="pmic">⚡</span>
+        <div><div class="pmn">Pix</div><div class="pms">Aprovação imediata · 5% de desconto</div></div>
+        <div class="pmck"></div>
+      </div>
+      <div class="pm" id="pm-wa" onclick="selPM('wa')">
+        <span class="pmic" style="color:#25D366">💬</span>
+        <div><div class="pmn">WhatsApp</div><div class="pms">Finalize diretamente pelo WhatsApp</div></div>
+        <div class="pmck"></div>
+      </div>
+    </div>
+
+    <div class="payform" id="form-card" style="display:flex;flex-direction:column">
+      <label class="pfl">Número do Cartão</label>
+      <input class="pfi" id="ccnum" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCC(this)">
+      <label class="pfl">Nome no Cartão</label>
+      <input class="pfi" id="ccname" placeholder="NOME COMO NO CARTÃO" style="text-transform:uppercase">
+      <div class="pfrow">
+        <div style="flex:1"><label class="pfl">Validade</label><input class="pfi" id="ccexp" placeholder="MM/AA" maxlength="5" oninput="fmtExp(this)"></div>
+        <div style="flex:1"><label class="pfl">CVV</label><input class="pfi" id="cccvv" placeholder="123" maxlength="4" type="tel"></div>
+      </div>
+    </div>
+
+    <div class="payform" id="form-pix">
+      <div class="pix-box">
+        <div class="pix-qr">⚡</div>
+        <div style="font-size:13px;color:var(--c1);margin-bottom:10px">Chave Pix GAD'S Ótica:</div>
+        <div class="pix-key" id="pixKey" onclick="copyPix()">(81) 99782-1384</div>
+        <button class="btn btn-g btn-full" onclick="copyPix()">📋 Copiar Chave Pix</button>
+      </div>
+    </div>
+
+    <div class="payform" id="form-wa">
+      <div class="pix-box">
+        <div class="pix-qr">💬</div>
+        <div style="font-size:13px;color:var(--c1)">Você será redirecionado(a) para o WhatsApp da GAD'S Ótica para finalizar o pedido.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-g" id="payBtn" onclick="processPay()" style="margin:14px 18px;width:calc(100% - 36px)">Confirmar Pagamento</button>
+  </div>
+</div>
+
+<!-- ══ AUTH ══ -->
+<div class="authov" id="authOv" onclick="if(event.target===this)closeAuth()">
+  <div class="authsh">
+    <div class="authhd">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx)">Minha Conta</div>
+      <button class="shcl" onclick="closeAuth()">✕</button>
+    </div>
+    <div class="authts">
+      <button class="atab on" id="atab-login" onclick="swAuth('login')">Entrar</button>
+      <button class="atab" id="atab-reg" onclick="swAuth('reg')">Cadastrar</button>
+    </div>
+    <div class="authform" id="form-login">
+      <label class="pfl">E-mail</label>
+      <input class="pfi" id="liEmail" type="email" placeholder="seu@email.com">
+      <label class="pfl">Senha</label>
+      <input class="pfi" id="liPass" type="password" placeholder="••••••">
+      <button class="btn btn-g btn-full" style="margin-top:16px" onclick="doLogin()">Entrar</button>
+    </div>
+    <div class="authform" id="form-reg" style="display:none">
+      <label class="pfl">Nome completo</label>
+      <input class="pfi" id="rgName" placeholder="Seu nome">
+      <label class="pfl">E-mail</label>
+      <input class="pfi" id="rgEmail" type="email" placeholder="seu@email.com">
+      <label class="pfl">WhatsApp</label>
+      <input class="pfi" id="rgPhone" type="tel" placeholder="(81) 9xxxx-xxxx">
+      <label class="pfl">Senha</label>
+      <input class="pfi" id="rgPass" type="password" placeholder="Mín. 6 caracteres">
+      <button class="btn btn-g btn-full" style="margin-top:16px" onclick="doReg()">Criar Conta</button>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- ══ SUCCESS ══ -->
+<div class="sucov" id="sucOv">
+  <div class="sucbox">
+    <div class="suci">✅</div>
+    <div class="suct" id="sucTitle">Pedido Confirmado!</div>
+    <p class="subs" id="sucSub">Obrigado pela sua compra. Em breve entraremos em contato.</p>
+    <div class="succ" id="sucCode">GADS-000000</div>
+    <button class="btn btn-g btn-full" onclick="closeSuc()">Continuar Comprando</button>
+  </div>
+</div>
+
+<script>
+// ═══ PRODUTOS ═══
+let PRODS = JSON.parse(localStorage.getItem('gads_products')||'null') || [
+  {id:1,name:"Óculos de Sol Quadrado UV400",sub:"Acetato · Unissex",price:129.90,emoji:"🕶️",cat:"sol,acetato",badge:"new",desc:"Óculos de sol em acetato de alta qualidade com proteção UV400 total. Design quadrado moderno e atemporal que combina com todos os estilos. Leve e resistente para o dia a dia.",vars:["Preto Fosco","Tartaruga Clássico","Marrom Escuro","Azul Petróleo"],stock:20},
+  {id:2,name:"Armação de Grau Metal Fina",sub:"Metal · Masculino",price:189.90,emoji:"👓",cat:"grau,metal",badge:"new",desc:"Armação metálica ultrafina e resistente. Design minimalista e elegante, compatível com diversas prescrições. Acabamento premium dourado ou preto.",vars:["Dourado","Prata","Preto Fosco","Rosé Gold"],stock:14},
+  {id:3,name:"Óculos de Sol Aviador",sub:"Metal · Unissex",price:149.90,emoji:"😎",cat:"sol,metal",badge:"",desc:"O clássico aviador em versão premium. Armação metálica resistente com lentes espelhadas de alta proteção. Estilo eterno que nunca sai de moda.",vars:["Dourado/Espelhado","Prata/Azul","Preto/Fumê"],stock:12},
+  {id:4,name:"Armação Infantil Colorida",sub:"TR90 · Infantil",price:99.90,emoji:"🌈",cat:"infantil",badge:"",desc:"Armação infantil em TR90, material flexível e resistente a impactos. 100% segura, certificada pelo INMETRO. Cores vibrantes e divertidas que as crianças adoram.",vars:["Azul Royal","Rosa Pink","Verde Lima","Vermelho","Roxo"],stock:30},
+  {id:5,name:"Óculos de Sol Cat Eye",sub:"Acetato · Feminino",price:139.90,emoji:"😎",cat:"sol,acetato",badge:"sale",desc:"Design cat eye elegante e feminino em acetato italiano. Perfeito para looks sofisticados. Lentes com tratamento anti-reflexo e proteção UV400.",vars:["Preto/Dourado","Tartaruga/Dourado","Vinho/Rosé"],stock:10},
+  {id:6,name:"Lente de Contato Mensal",sub:"Esférica · Par",price:79.90,emoji:"👁️",cat:"lentes",badge:"",desc:"Lentes de contato mensais de alta permeabilidade ao oxigênio. Confortáveis para uso prolongado. Disponíveis em diversas graduações. Necessária receita médica.",vars:["Transparente","Verde","Mel","Cinza","Azul"],stock:50},
+  {id:7,name:"Armação de Grau Acetato",sub:"Acetato · Feminino",price:219.90,emoji:"👓",cat:"grau,acetato",badge:"new",desc:"Armação em acetato de alta qualidade com design arredondado. Confortável para uso diário, disponível em cores exclusivas. Compatível com lentes oftalmológicas de qualquer graduação.",vars:["Nude Cristal","Havana","Preto Brilho","Rosa Translúcido"],stock:9},
+  {id:8,name:"Óculos de Sol Oversized",sub:"Acetato · Feminino",price:159.90,emoji:"🕶️",cat:"sol,acetato",badge:"",desc:"Óculos oversized com visual fashion e proteção total. Armação acetato com lente degradê de alta qualidade. O acessório perfeito para completar qualquer look.",vars:["Preto Brilho","Havana Claro","Azul Translúcido"],stock:8},
+  {id:9,name:"Lente de Contato Colorida",sub:"Colorida · Par",price:89.90,emoji:"✨",cat:"lentes",badge:"new",desc:"Lentes coloridas que transformam o visual. Descartáveis mensais com máximo conforto. Certificadas pela ANVISA. Disponíveis em diversas cores para realçar ou mudar o olho.",vars:["Verde Esmeralda","Mel Dourado","Cinza Aço","Azul Oceano","Castanho"],stock:35},
+  {id:10,name:"Estojo Premium + Kit Limpeza",sub:"Acessório",price:49.90,emoji:"🧴",cat:"acessorios",badge:"",desc:"Kit completo com estojo rígido premium, flanela de microfibra, spray limpador de lentes e chave de ajuste. O cuidado ideal para seus óculos.",vars:["Preto","Marrom"],stock:40},
+  {id:11,name:"Armação de Grau Titanium",sub:"Titânio · Leve",price:349.90,emoji:"👓",cat:"grau,metal",badge:"",desc:"Armação ultraleviana em titânio puro, hipoalergênica e anticcorrosiva. A escolha premium para quem exige o máximo em conforto e durabilidade. Garantia de 2 anos.",vars:["Prata Titânio","Ouro Rosê","Chumbo Fosco"],stock:5},
+  {id:12,name:"Óculos de Sol Esportivo",sub:"Policarbonato · Unissex",price:119.90,emoji:"🏃",cat:"sol",badge:"",desc:"Óculos esportivo com armação leve em policarbonato e lentes com proteção UV400 polarizada. Ideal para corrida, ciclismo e atividades ao ar livre.",vars:["Preto/Vermelho","Azul/Cinza","Verde/Preto"],stock:15},
+];
+
+let cart = JSON.parse(localStorage.getItem('gads_cart')||'[]');
+let user = JSON.parse(localStorage.getItem('gads_user')||'null');
+let activeF = 'todos';
+let curProd = null;
+let curVar = null;
+let payMethod = 'card';
+let camStream = null;
+let tryIdx = 0;
+let snapBlob = null;
+
+const tryModels = [
+  {name:'Aviador',emoji:'🕶️',shape:'av'},
+  {name:'Retangular',emoji:'👓',shape:'rect'},
+  {name:'Oval',emoji:'😎',shape:'oval'},
+  {name:'Redondo',emoji:'🔵',shape:'round'},
+  {name:'Cat Eye',emoji:'✨',shape:'cat'},
+];
+
+// ═══ UTILS ═══
+const $ = id => document.getElementById(id);
+const fmt = v => 'R$ '+Number(v).toFixed(2).replace('.',',');
+function toast(msg,bg){
+  const t=$('toast'); t.textContent=msg; t.style.background=bg||'var(--bg3)';
+  t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2800);
+}
+function saveCart(){ localStorage.setItem('gads_cart',JSON.stringify(cart)); }
+
+// ═══ HORÁRIO ═══
+function initHorario(){
+  const now = new Date();
+  const brt = new Date(now.toLocaleString('en-US',{timeZone:'America/Recife'}));
+  const dow = brt.getDay(); // 0=dom
+  const h = brt.getHours();
+  const m = brt.getMinutes();
+  const hm = h*60+m;
+
+  // highlight today
+  // 0=dom,1=seg,...,6=sab → row ids hr-0..hr-6 = seg..dom
+  const dayMap = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+  const rowIdx = dayMap[dow];
+  const row = document.getElementById('hr-'+rowIdx);
+  if(row) row.classList.add('today');
+
+  // open/closed
+  let open = false;
+  if(dow>=1&&dow<=5){ open = hm>=540&&hm<1050; } // seg-sex 9:00-17:30
+  else if(dow===6){ open = hm>=540&&hm<720; } // sab 9:00-12:00
+
+  const badge = document.createElement('span');
+  badge.className = 'hbadge2'+(open?'':' closed');
+  badge.textContent = open ? '● Aberto agora' : '● Fechado';
+  if(row) row.appendChild(badge);
+
+  const st = $('statusNow');
+  if(st) st.textContent = open ? 'Aberto agora' : 'Fechado no momento';
+}
+
+// ═══ NAV ═══
+function goTab(tab){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  $('pg-'+tab).classList.add('on');
+  $('tab-'+tab).classList.add('on');
+  window.scrollTo(0,0);
+  if(tab==='catalog') renderAll(PRODS);
+  if(tab==='tryon') initTryGrid();
+}
+
+// ═══ RENDER ═══
+function renderCard(p){
+  return `<div class="pcard" onclick="openPD(${p.id})">
+    <div class="pimg">
+      ${p.badge?`<span class="pbg ${p.badge}">${p.badge==='new'?'Novo':'Oferta'}</span>`:''}
+      ${p.emoji}
+    </div>
+    <div class="pinfo">
+      <div class="pname">${p.name}</div>
+      <div class="psub">${p.sub}</div>
+      <div class="prow">
+        <div class="ppr">${fmt(p.price)}</div>
+        <button class="padd" onclick="event.stopPropagation();qAdd(${p.id})">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderHome(){ $('homeProds').innerHTML=PRODS.slice(0,6).map(renderCard).join(''); }
+function renderAll(list){
+  $('allProds').innerHTML=list.length
+    ? list.map(renderCard).join('')
+    : '<div style="padding:44px 18px;text-align:center;color:var(--c3);grid-column:span 2">Nenhum produto encontrado</div>';
+}
+function filterSearch(){
+  const q=$('searchIn').value.toLowerCase();
+  let list = activeF==='todos' ? PRODS : PRODS.filter(p=>p.cat.includes(activeF));
+  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||p.sub.toLowerCase().includes(q));
+  renderAll(list);
+}
+function setFil(el,f){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); activeF=f; filterSearch();
+}
+function fcHome(el,f){
+  document.querySelectorAll('#homecats .cat').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); goTab('catalog');
+  setTimeout(()=>{
+    activeF=f;
+    document.querySelectorAll('.ftab').forEach(t=>t.classList.toggle('on',f==='todos'?t.textContent==='Todos':t.textContent.toLowerCase().includes(f)));
+    filterSearch();
+  },100);
+}
+
+// ═══ PRODUCT DETAIL ═══
+function openPD(id){
+  const p=PRODS.find(x=>x.id===id); if(!p) return;
+  curProd=p; curVar=p.vars?.[0]||null;
+  $('pdTit').textContent=p.name;
+  $('pdImg').textContent=p.emoji;
+  $('pdImg').style.fontSize='90px';
+  $('pdName').textContent=p.name;
+  $('pdBrand').textContent=p.sub;
+  $('pdPrice').textContent=fmt(p.price);
+  $('pdParcel').textContent=`ou 3x ${fmt(p.price/3)} sem juros`;
+  $('pdTags').innerHTML=(p.cat||'').split(',').map(t=>`<span class="pdtag">${t.trim()}</span>`).join('');
+  $('pdDesc').textContent=p.desc||'';
+  $('pdVars').innerHTML=(p.vars||[]).map((v,i)=>`<div class="pdvb${i===0?' on':''}" onclick="selVar(this,'${v}')">${v}</div>`).join('');
+  $('pdBadge').textContent=cart.reduce((a,c)=>a+c.qty,0);
+  $('rxPDLbl').textContent='';
+  $('rxPD').classList.remove('has-file');
+  $('pdOv').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePD(){ $('pdOv').classList.remove('on'); document.body.style.overflow=''; }
+function selVar(el,v){
+  curVar=v;
+  document.querySelectorAll('.pdvb').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ═══ CART ═══
+function updBadge(){
+  const n=cart.reduce((a,c)=>a+c.qty,0);
+  $('cartBadge').textContent=n;
+  $('pdBadge').textContent=n;
+}
+function qAdd(id){
+  const p=PRODS.find(x=>x.id===id); if(!p) return;
+  addToCart(p,p.vars?.[0]||'');
+}
+function addFromPD(){
+  if(!curProd) return;
+  addToCart(curProd,curVar||curProd.vars?.[0]||'');
+  closePD();
+}
+function addToCart(p,v){
+  const ex=cart.find(x=>x.id===p.id&&x.var===v);
+  if(ex){ ex.qty++; } else { cart.push({id:p.id,name:p.name,emoji:p.emoji,price:p.price,var:v,qty:1}); }
+  saveCart(); updBadge();
+  toast(`✅ ${p.name} adicionado!`);
+}
+function openCart(){ $('cartOv').classList.add('on'); renderCart(); document.body.style.overflow='hidden'; }
+function closeCart(){ $('cartOv').classList.remove('on'); document.body.style.overflow=''; }
+function renderCart(){
+  if(!cart.length){ $('cartBody').innerHTML='<div class="cem"><span style="font-size:48px;display:block;margin-bottom:10px">🛒</span><p style="color:var(--c2)">Seu carrinho está vazio</p></div>'; }
+  else {
+    $('cartBody').innerHTML=cart.map(i=>`
+      <div class="cit">
+        <div class="cie">${i.emoji}</div>
+        <div style="flex:1">
+          <div class="cin">${i.name}</div>
+          <div class="cis">${i.var||''}</div>
+          <div class="cip">${fmt(i.price*i.qty)}</div>
+          <div class="ciqb">
+            <button class="ciqbtn" onclick="cQty(${i.id},'${i.var}',-1)">−</button>
+            <span class="ciq">${i.qty}</span>
+            <button class="ciqbtn" onclick="cQty(${i.id},'${i.var}',1)">+</button>
+          </div>
+        </div>
+        <button class="cirm" onclick="rmItem(${i.id},'${i.var}')">🗑️</button>
+      </div>`).join('');
+  }
+  $('cartTotal').textContent=fmt(cart.reduce((a,c)=>a+c.price*c.qty,0));
+}
+function cQty(id,v,d){
+  const i=cart.find(x=>x.id===id&&x.var===v); if(!i) return;
+  i.qty+=d; if(i.qty<=0) cart=cart.filter(x=>!(x.id===id&&x.var===v));
+  saveCart(); updBadge(); renderCart();
+}
+function rmItem(id,v){ cart=cart.filter(x=>!(x.id===id&&x.var===v)); saveCart(); updBadge(); renderCart(); toast('🗑️ Removido'); }
+
+// ═══ PAYMENT ═══
+function openPay(){
+  if(!cart.length){ toast('🛒 Carrinho vazio!','var(--r)'); return; }
+  closeCart(); renderPaySum();
+  ['card','pix','wa'].forEach(k=>{ $('form-'+k).style.display='none'; });
+  $('form-card').style.display='flex';
+  $('payOv').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePay(){ $('payOv').classList.remove('on'); document.body.style.overflow=''; }
+function renderPaySum(){
+  const tot=cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const disc=payMethod==='pix'?tot*.05:0;
+  $('paySumary').innerHTML=`
+    ${cart.map(i=>`<div class="psr"><span>${i.name} x${i.qty}</span><span>${fmt(i.price*i.qty)}</span></div>`).join('')}
+    ${disc?`<div class="psr"><span>Desconto Pix (5%)</span><span style="color:#25D366">−${fmt(disc)}</span></div>`:''}
+    <div class="psr" style="font-weight:700;color:var(--au)"><span>Total</span><span>${fmt(tot-disc)}</span></div>`;
+}
+function selPM(m){
+  payMethod=m;
+  ['card','pix','wa'].forEach(k=>{
+    $('pm-'+k).classList.toggle('on',k===m);
+    $('pm-'+k).querySelector('.pmck').textContent=k===m?'✓':'';
+    $('form-'+k).style.display=k===m?'':'none';
+    if(k===m&&k==='card') $('form-card').style.display='flex';
+  });
+  renderPaySum();
+  const labels={card:'Confirmar Pagamento',pix:'Confirmar Pix',wa:'Enviar pelo WhatsApp'};
+  $('payBtn').textContent=labels[m]||'Confirmar';
+}
+function fmtCC(el){ let v=el.value.replace(/\D/g,'').substring(0,16); el.value=v.replace(/(.{4})/g,'$1 ').trim(); }
+function fmtExp(el){ let v=el.value.replace(/\D/g,'').substring(0,4); if(v.length>2) v=v.substring(0,2)+'/'+v.substring(2); el.value=v; }
+function copyPix(){ navigator.clipboard.writeText('81997821384').then(()=>toast('✅ Chave Pix copiada!')).catch(()=>toast('📋 Chave: (81) 99782-1384')); }
+function processPay(){
+  const tot=cart.reduce((a,c)=>a+c.price*c.qty,0);
+  if(payMethod==='card'){
+    const num=$('ccnum').value.replace(/\s/g,'');
+    const name=$('ccname').value.trim();
+    const exp=$('ccexp').value;
+    const cvv=$('cccvv').value;
+    if(num.length<16||!name||exp.length<5||cvv.length<3){ toast('⚠️ Preencha todos os dados','var(--r)'); return; }
+    showSuc('Pagamento Aprovado! 🎉','Compra aprovada no cartão. Você receberá confirmação em breve.'); cart=[]; saveCart(); updBadge();
+  } else if(payMethod==='pix'){
+    showSuc('Aguardando Pix ⚡',`Use a chave (81) 99782-1384. Valor: ${fmt(tot*.95)} (5% off)`);
+  } else if(payMethod==='wa'){
+    const msg=`Olá GAD'S Ótica! Gostaria de finalizar um pedido:%0A${cart.map(i=>`• ${i.name}${i.var?' ('+i.var+')':''} x${i.qty} = ${fmt(i.price*i.qty)}`).join('%0A')}%0A%0ATotal: ${fmt(tot)}`;
+    window.open(`https://wa.me/5581997821384?text=${msg}`,'_blank');
+    closePay(); cart=[]; saveCart(); updBadge(); return;
+  }
+}
+function showSuc(t,s){ closePay(); $('sucTitle').textContent=t; $('sucSub').textContent=s; $('sucCode').textContent=`GADS-${Date.now().toString().slice(-6)}`; $('sucOv').classList.add('on'); }
+function closeSuc(){ $('sucOv').classList.remove('on'); }
+
+// ═══ CAMERA ═══
+async function toggleCam(){
+  const btn=$('camBtn');
+  if(camStream){
+    camStream.getTracks().forEach(t=>t.stop()); camStream=null;
+    $('vid').style.display='none'; $('camPh').style.display='flex';
+    btn.textContent='📷 Ativar Câmera'; $('snapBtn').disabled=true; $('shareBtn').disabled=true;
+    clearCov(); return;
+  }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:960}},audio:false});
+    camStream=stream;
+    const v=$('vid'); v.srcObject=stream; v.style.display='block';
+    $('camPh').style.display='none';
+    btn.textContent='🛑 Desativar Câmera'; $('snapBtn').disabled=false;
+    v.onloadedmetadata=()=>{ setupCov(); drawGlasses(); };
+    toast('📷 Câmera ativa! Escolha o modelo abaixo.');
+  } catch(e){
+    toast('❌ Permissão de câmera negada. Verifique as configurações.','var(--r)');
+  }
+}
+function setupCov(){
+  const v=$('vid'), c=$('cov');
+  c.width=v.videoWidth||v.offsetWidth; c.height=v.videoHeight||v.offsetHeight;
+  c.style.position='absolute'; c.style.top='0'; c.style.left='0';
+  c.style.width='100%'; c.style.height='100%';
+}
+function drawGlasses(){
+  const c=$('cov'); const ctx=c.getContext('2d');
+  if(!ctx||!camStream) return;
+  ctx.clearRect(0,0,c.width,c.height);
+  const w=c.width,h=c.height,cx=w/2,cy=h*.37;
+  const fw=w*.72,fh=fw*.42;
+  ctx.save();
+  ctx.strokeStyle='rgba(201,146,42,.92)';
+  ctx.lineWidth=Math.max(3,w/100);
+  ctx.shadowColor='rgba(201,146,42,.5)'; ctx.shadowBlur=12;
+  const shape=tryModels[tryIdx].shape;
+  if(shape==='rect'){
+    const lw=fw*.43,lh=fh,rad=lh*.12;
+    ctx.beginPath(); ctx.roundRect(cx-fw/2,cy-lh/2,lw,lh,rad); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(cx+fw/2-lw,cy-lh/2,lw,lh,rad); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-fw/2+lw,cy); ctx.lineTo(cx+fw/2-lw,cy); ctx.stroke();
+  } else if(shape==='round'||shape==='oval'){
+    const rx=fw*.22,ry=shape==='oval'?fh*.55:fw*.22;
+    ctx.beginPath(); ctx.ellipse(cx-fw*.23,cy,rx,ry,0,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx+fw*.23,cy,rx,ry,0,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-fw*.23+rx,cy); ctx.lineTo(cx+fw*.23-rx,cy); ctx.stroke();
+  } else if(shape==='cat'){
+    const lw=fw*.44,lh=fh,rad=[lh*.05,lh*.38,lh*.05,lh*.05];
+    ctx.beginPath(); ctx.roundRect(cx-fw/2,cy-lh/2,lw,lh,rad); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(cx+fw/2-lw,cy-lh/2,lw,lh,[lh*.38,lh*.05,lh*.05,lh*.05]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-fw/2+lw,cy); ctx.lineTo(cx+fw/2-lw,cy); ctx.stroke();
+  } else {
+    // aviador
+    const rx=fw*.22,ry=fh*.52;
+    ctx.beginPath(); ctx.ellipse(cx-fw*.23,cy+fh*.08,rx,ry,-.08,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx+fw*.23,cy+fh*.08,rx,ry,.08,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-fw*.01,cy-fh*.14); ctx.lineTo(cx+fw*.01,cy-fh*.14); ctx.stroke();
+  }
+  // hastes
+  ctx.beginPath(); ctx.moveTo(cx-fw/2,cy-fh*.15); ctx.lineTo(cx-fw/2-w*.07,cy-fh*.05); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+fw/2,cy-fh*.15); ctx.lineTo(cx+fw/2+w*.07,cy-fh*.05); ctx.stroke();
+  ctx.restore();
+  if(camStream) requestAnimationFrame(drawGlasses);
+}
+function clearCov(){ const c=$('cov'),ctx=c.getContext('2d'); if(ctx) ctx.clearRect(0,0,c.width,c.height); }
+function snapPhoto(){
+  if(!camStream){ toast('📷 Ative a câmera primeiro'); return; }
+  const v=$('vid'); const tmp=document.createElement('canvas');
+  tmp.width=v.videoWidth; tmp.height=v.videoHeight;
+  const ctx=tmp.getContext('2d');
+  ctx.scale(-1,1); ctx.drawImage(v,-tmp.width,0); ctx.scale(-1,1);
+  ctx.drawImage($('cov'),0,0);
+  tmp.toBlob(blob=>{ snapBlob=blob; $('shareBtn').disabled=false; toast('📸 Foto tirada! Toque em Compartilhar.'); },'image/jpeg',.92);
+}
+function sharePhoto(){
+  if(!snapBlob){ toast('📸 Tire uma foto primeiro'); return; }
+  const f=new File([snapBlob],'gads-tryon.jpg',{type:'image/jpeg'});
+  if(navigator.share&&navigator.canShare({files:[f]})) navigator.share({title:"GAD'S Ótica — Prova Virtual",text:'Olha como ficou!',files:[f]});
+  else { const a=document.createElement('a'); a.href=URL.createObjectURL(snapBlob); a.download='gads-tryon.jpg'; a.click(); toast('📥 Foto salva!'); }
+}
+function initTryGrid(){
+  $('tryGrid').innerHTML=tryModels.map((m,i)=>`
+    <div class="tryitem${i===0?' on':''}" onclick="selTry(${i},this)">
+      <div class="trythumb">${m.emoji}</div>
+      <div class="tryname">${m.name}</div>
+    </div>`).join('');
+}
+function selTry(i,el){
+  tryIdx=i;
+  document.querySelectorAll('.tryitem').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ═══ RX UPLOAD ═══
+function trigRx(inputId){ $(inputId).click(); }
+function handleRx(input,boxId){
+  const f=input.files[0]; if(!f) return;
+  const lblMap={rxHome:'rxHomeLbl',rxTry:'rxTryLbl',rxPD:'rxPDLbl'};
+  const lblId=lblMap[boxId];
+  if(lblId) $(lblId).textContent=`📎 ${f.name} (${(f.size/1024).toFixed(0)}KB)`;
+  $(boxId).classList.add('has-file');
+  storeRx(f);
+  toast(`✅ Receita "${f.name}" recebida! Nossa equipe entrará em contato.`);
+}
+function handleRxProf(input){
+  const f=input.files[0]; if(!f) return;
+  storeRx(f); toast(`✅ Receita "${f.name}" enviada com sucesso!`);
+}
+function storeRx(f){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const rxs=JSON.parse(localStorage.getItem('gads_receipts')||'[]');
+    rxs.push({name:f.name,size:f.size,type:f.type,date:new Date().toISOString()});
+    localStorage.setItem('gads_receipts',JSON.stringify(rxs));
+  };
+  reader.readAsDataURL(f);
+}
+
+// ═══ AUTH ═══
+function openAuth(tab){ $('authOv').classList.add('on'); swAuth(tab||'login'); document.body.style.overflow='hidden'; }
+function closeAuth(){ $('authOv').classList.remove('on'); document.body.style.overflow=''; }
+function swAuth(tab){
+  ['login','reg'].forEach(t=>{ $('atab-'+t).classList.toggle('on',t===tab); $('form-'+t).style.display=t===tab?'flex':'none'; });
+}
+function doLogin(){
+  const email=$('liEmail').value.trim(),pass=$('liPass').value;
+  if(!email||!pass){ toast('⚠️ Preencha e-mail e senha','var(--r)'); return; }
+  const users=JSON.parse(localStorage.getItem('gads_users')||'[]');
+  const u=users.find(x=>x.email===email&&x.pass===pass);
+  if(!u){ toast('❌ E-mail ou senha incorretos','var(--r)'); return; }
+  user=u; localStorage.setItem('gads_user',JSON.stringify(u));
+  updUserUI(); closeAuth(); toast(`👋 Bem-vindo(a), ${u.name.split(' ')[0]}!`);
+}
+function doReg(){
+  const name=$('rgName').value.trim(),email=$('rgEmail').value.trim(),phone=$('rgPhone').value.trim(),pass=$('rgPass').value;
+  if(!name||!email||pass.length<6){ toast('⚠️ Preencha todos os campos (senha mín. 6 chars)','var(--r)'); return; }
+  const users=JSON.parse(localStorage.getItem('gads_users')||'[]');
+  if(users.find(u=>u.email===email)){ toast('⚠️ E-mail já cadastrado','var(--r)'); return; }
+  const u={id:Date.now(),name,email,phone,pass,pts:0};
+  users.push(u); localStorage.setItem('gads_users',JSON.stringify(users));
+  user=u; localStorage.setItem('gads_user',JSON.stringify(u));
+  updUserUI(); closeAuth(); toast(`🎉 Bem-vindo(a) à GAD'S, ${name.split(' ')[0]}!`);
+}
+function doLogout(){ user=null; localStorage.removeItem('gads_user'); updUserUI(); toast('👋 Até logo!'); }
+function updUserUI(){
+  if(user){ $('userName').textContent=user.name; $('userEmail').textContent=user.email; $('userAv').textContent='👤'; $('guestBtns').style.display='none'; $('logBtns').style.display='block'; $('loyPts').textContent=(user.pts||750).toLocaleString('pt-BR'); }
+  else { $('userName').textContent='Visitante'; $('userEmail').textContent='Faça login para acessar'; $('guestBtns').style.display='flex'; $('logBtns').style.display='none'; }
+}
+
+// ═══ EXTERNAL ═══
+function openWA(){ window.open("https://wa.me/5581997821384?text=Olá!%20Vim%20pelo%20app%20da%20GAD'S%20Ótica%20e%20preciso%20de%20ajuda.",'_blank'); }
+function openMaps(){ window.open('https://maps.google.com/?q=Rua+Arquiteto+Luiz+Nunes,+873,+Imbiribeira,+Recife,+PE','_blank'); }
+
+// ═══ INIT ═══
+renderHome(); renderAll(PRODS); updBadge(); updUserUI(); initHorario();
+if(user) toast(`👋 Olá, ${user.name.split(' ')[0]}!`);
+setTimeout(()=>{
+  $('splash').classList.add('out');
+  setTimeout(()=>{ $('splash').style.display='none'; $('app').classList.add('on'); },800);
+}, 2500);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

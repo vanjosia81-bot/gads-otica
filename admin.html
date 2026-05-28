@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GAD'S Admin — Painel de Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0b05;--bg2:#18120a;--bg3:#231a0d;--bg4:#2d2010;
+  --au:#c9922a;--aum:#e5a83a;--aul:#f5c95e;--aup:#2a1e08;--aux:#f9e9c0;
+  --tx:#f5ead8;--c1:#c9b89a;--c2:#9a8268;--c3:#5a4a38;
+  --r:#d63031;--o:#e17055;--g:#00b894;--gr:#25D366;
+  --w:#fff;
+  --sh:0 4px 20px rgba(201,146,42,.1);--shb:0 8px 36px rgba(201,146,42,.18);
+  --brd:1px solid rgba(201,146,42,.18);
+  --rad:10px;--radlg:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);display:flex}
+
+/* ── SIDEBAR ── */
+.sb{width:240px;background:var(--bg2);min-height:100vh;position:fixed;top:0;left:0;z-index:100;display:flex;flex-direction:column;border-right:var(--brd);transition:transform .3s}
+.sb.closed{transform:translateX(-240px)}
+.gold-stripe{height:3px;background:linear-gradient(90deg,var(--bg2) 0%,var(--c3) 20%,var(--au) 50%,var(--aul) 65%,var(--au) 80%,var(--bg2) 100%)}
+.sbl{padding:22px 18px;border-bottom:var(--brd)}
+.sbl-n{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--au);letter-spacing:.22em;text-shadow:0 0 20px rgba(201,146,42,.3)}
+.sbl-s{font-size:8.5px;font-family:'JetBrains Mono',monospace;letter-spacing:.25em;color:var(--c2);text-transform:uppercase;margin-top:2px}
+.snav{flex:1;padding:14px 0;overflow-y:auto;scrollbar-width:none}
+.snav::-webkit-scrollbar{display:none}
+.snav-s{font-size:8.5px;font-weight:700;letter-spacing:.24em;color:var(--c3);text-transform:uppercase;font-family:'JetBrains Mono',monospace;padding:12px 18px 5px}
+.si{display:flex;align-items:center;gap:11px;padding:11px 18px;cursor:pointer;color:var(--c2);font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left;transition:all .2s;text-decoration:none;font-family:'DM Sans',sans-serif}
+.si:hover{background:rgba(201,146,42,.07);color:var(--tx)}
+.si.on{background:rgba(201,146,42,.12);color:var(--au);border-right:3px solid var(--au)}
+.si-ic{font-size:17px;width:22px;text-align:center}
+.sibadge{background:var(--r);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;font-family:'JetBrains Mono',monospace}
+.suser{padding:14px 18px;border-top:var(--brd);display:flex;align-items:center;gap:9px}
+.suser-av{width:34px;height:34px;border-radius:50%;background:var(--aup);display:flex;align-items:center;justify-content:center;font-size:15px;border:var(--brd)}
+.suser-n{font-size:12px;font-weight:600;color:var(--tx)}
+.suser-r{font-size:9px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+
+/* ── MAIN ── */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:rgba(18,10,5,.95);backdrop-filter:blur(12px);border-bottom:var(--brd);padding:14px 26px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.tb-l{display:flex;align-items:center;gap:14px}
+.mnt{background:none;border:none;cursor:pointer;font-size:21px;color:var(--au);display:none}
+.pgtit{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--tx)}
+.tb-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tbtn{background:rgba(201,146,42,.1);border:var(--brd);border-radius:var(--rad);padding:9px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;color:var(--au);transition:all .2s;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:var(--au);color:#0e0b05}
+.tbtn-g{background:rgba(0,184,148,.1);color:var(--g);border-color:rgba(0,184,148,.3)}.tbtn-g:hover{background:var(--g);color:#fff}
+.tbtn-r{background:rgba(214,48,49,.08);color:var(--r);border-color:rgba(214,48,49,.25)}.tbtn-r:hover{background:var(--r);color:#fff}
+.content{padding:26px;flex:1}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.on{display:block;animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── KPI ── */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:24px}
+.kpi{background:var(--bg2);border-radius:var(--radlg);padding:18px;box-shadow:var(--sh);border:var(--brd);position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
+.kpi.kgold::after{background:var(--au)}.kpi.kred::after{background:var(--r)}.kpi.kgreen::after{background:var(--g)}.kpi.kblue::after{background:#74b9ff}
+.kicon{font-size:28px;margin-bottom:8px}
+.kval{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--aul);display:block}
+.klbl{font-size:10.5px;color:var(--c2);font-family:'JetBrains Mono',monospace;letter-spacing:.07em}
+.ktrend{font-size:10.5px;font-weight:700;margin-top:3px}
+.ktrend.up{color:var(--g)}.ktrend.dn{color:var(--r)}
+
+/* ── CHARTS ── */
+.crow{display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:24px}
+.cc{background:var(--bg2);border-radius:var(--radlg);padding:22px;border:var(--brd)}
+.cct{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:16px}
+.barchart{display:flex;flex-direction:column;gap:9px}
+.barrow{display:flex;align-items:center;gap:11px}
+.barlbl{font-size:9.5px;color:var(--c2);width:80px;text-align:right;font-family:'JetBrains Mono',monospace}
+.barwrap{flex:1;background:rgba(201,146,42,.1);border-radius:50px;height:10px;overflow:hidden}
+.barfill{height:100%;border-radius:50px;transition:width 1s ease}
+.barval{font-size:9.5px;font-weight:700;color:var(--au);width:40px;font-family:'JetBrains Mono',monospace}
+.ditem{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid rgba(201,146,42,.08)}
+.ditem:last-child{border-bottom:none}
+.ddll{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--c1)}
+.ddot{width:10px;height:10px;border-radius:50%}
+.dpct{font-size:12.5px;font-weight:700;color:var(--aul);font-family:'JetBrains Mono',monospace}
+
+/* ── ACTIVITY ── */
+.act{background:var(--bg2);border-radius:var(--radlg);padding:22px;border:var(--brd);margin-bottom:24px}
+.aitem{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(201,146,42,.07)}
+.aitem:last-child{border-bottom:none}
+.aicon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.aicon.sale{background:rgba(0,184,148,.15)}.aicon.user{background:rgba(201,146,42,.12)}.aicon.rx{background:rgba(245,199,94,.12)}.aicon.warn{background:rgba(214,48,49,.1)}
+.atime{font-size:9.5px;color:var(--c3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.atxt{font-size:12.5px;font-weight:600;color:var(--c1)}
+
+/* ── TABLE ── */
+.twrap{background:var(--bg2);border-radius:var(--radlg);border:var(--brd);overflow:hidden}
+.thead{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:var(--brd)}
+.ttit{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--tx)}
+.tacts{display:flex;gap:9px;align-items:center}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 14px;text-align:left;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--c2);background:var(--bg3);border-bottom:var(--brd)}
+.tbl td{padding:13px 14px;font-size:12.5px;border-bottom:1px solid rgba(201,146,42,.07);vertical-align:middle}
+.tbl tr:hover td{background:rgba(201,146,42,.04)}
+.pce{display:flex;align-items:center}
+.pce-em{font-size:24px;margin-right:9px}
+.pce-n{font-weight:600;font-size:12.5px;color:var(--tx)}
+.pce-s{font-size:9.5px;color:var(--c2);font-family:'JetBrains Mono',monospace}
+.stk{display:inline-block;padding:3px 9px;border-radius:50px;font-size:9.5px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stk.ok{background:rgba(0,184,148,.12);color:var(--g)}.stk.low{background:rgba(225,112,85,.12);color:var(--o)}.stk.out{background:rgba(214,48,49,.1);color:var(--r)}
+.cpill{background:var(--aup);color:var(--aul);padding:2px 8px;border-radius:50px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;display:inline-block;margin:1px;border:var(--brd)}
+.acbts{display:flex;gap:6px}
+.ab{background:none;border:none;cursor:pointer;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .2s;color:var(--c2)}
+.ab:hover{background:rgba(201,146,42,.1);color:var(--au)}.ab.del:hover{background:rgba(214,48,49,.12);color:var(--r)}
+
+/* ── MODAL ── */
+.mbg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:18px}
+.mbg.on{display:flex}
+.mbox{background:var(--bg2);border-radius:18px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 70px rgba(0,0,0,.5);border-top:2px solid var(--au)}
+.mhd{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:var(--brd);position:sticky;top:0;background:var(--bg2);z-index:1;border-radius:14px 14px 0 0}
+.mtt{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--tx)}
+.mcl{background:var(--bg3);border:var(--brd);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--c2);transition:all .2s}
+.mcl:hover{color:var(--tx);border-color:var(--au)}
+.mbody{padding:22px}
+.frow{margin-bottom:15px}
+.fl{display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--c2);margin-bottom:5px}
+.fi{width:100%;padding:11px 14px;border:1.5px solid var(--c3);border-radius:var(--rad);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;background:var(--bg3);color:var(--tx)}
+.fi:focus{border-color:var(--au);background:var(--bg)}
+.fi::placeholder{color:var(--c3)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fta{resize:vertical;min-height:75px}
+.fsel{appearance:none;cursor:pointer}
+.egrid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:7px}
+.eb{font-size:20px;border:1.5px solid var(--c3);border-radius:7px;padding:5px;cursor:pointer;background:var(--bg3);transition:all .2s;text-align:center}
+.eb.on,.eb:hover{border-color:var(--au);background:var(--aup)}
+.bdgrow{display:flex;gap:7px;flex-wrap:wrap}
+.bopt{padding:7px 14px;border:1.5px solid var(--c3);border-radius:50px;cursor:pointer;font-size:11.5px;font-weight:600;background:var(--bg3);color:var(--c1);transition:all .2s}
+.bopt.on{border-color:var(--au);background:var(--aup);color:var(--au)}
+.mft{padding:0 22px 22px;display:flex;gap:10px}
+.bsave{background:linear-gradient(135deg,var(--au),var(--aum));color:#0e0b05;padding:12px 22px;border:none;border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex:1;transition:all .2s}
+.bsave:hover{box-shadow:0 4px 16px rgba(201,146,42,.4)}
+.bcanc{background:var(--bg3);color:var(--c1);padding:12px 16px;border:var(--brd);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.bcanc:hover{color:var(--tx)}
+.bdel{background:rgba(214,48,49,.1);color:var(--r);padding:12px 16px;border:1.5px solid rgba(214,48,49,.3);border-radius:var(--rad);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.bdel:hover{background:var(--r);color:#fff}
+
+/* ── ORDERS ── */
+.ocard{background:var(--bg2);border-radius:var(--radlg);padding:18px;border:var(--brd);margin-bottom:12px}
+.ohd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.oid{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--au)}
+.ost{padding:3px 10px;border-radius:50px;font-size:9.5px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.ost.pending{background:rgba(225,112,85,.12);color:var(--o)}.ost.paid{background:rgba(0,184,148,.12);color:var(--g)}.ost.shipped{background:rgba(116,185,255,.12);color:#74b9ff}
+.oabts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.oab{padding:7px 13px;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+
+/* ── RX GRID ── */
+.rxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:13px}
+.rxcard{background:var(--bg2);border-radius:var(--radlg);padding:16px;border:var(--brd)}
+.rxname{font-size:12.5px;font-weight:600;word-break:break-all;margin-bottom:3px;color:var(--tx)}
+.rxdate{font-size:9.5px;color:var(--c3);font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+
+/* ── ALERT BAR ── */
+.alert-bar{background:rgba(225,112,85,.1);border:1.5px solid rgba(225,112,85,.3);border-radius:var(--rad);padding:13px 18px;display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.alert-bar span{font-size:13.5px;font-weight:600;color:var(--o)}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:18px;right:18px;background:var(--bg3);border:var(--brd);color:var(--tx);padding:12px 20px;border-radius:12px;font-weight:600;font-size:13px;opacity:0;z-index:9999;transition:all .3s;transform:translateX(14px);box-shadow:var(--shb)}
+.toast.on{opacity:1;transform:translateX(0)}
+
+/* ── SRCH INPUT ── */
+.srch-inp{padding:8px 15px;border:1.5px solid var(--c3);border-radius:50px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg3);color:var(--tx);transition:border-color .2s}
+.srch-inp:focus{border-color:var(--au)}
+.srch-inp::placeholder{color:var(--c3)}
+
+/* ── MEASURES TABLE ── */
+.mcard{background:var(--bg2);border-radius:var(--radlg);padding:18px;border:var(--brd);margin-bottom:12px}
+.mcard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;background:var(--bg3);border-radius:9px;padding:12px;margin-top:10px;border:var(--brd)}
+.mcard-m{text-align:center}
+.mcard-v{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--au)}
+.mcard-l{font-size:8.5px;color:var(--c2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+
+@media(max-width:1100px){.kgrid{grid-template-columns:repeat(2,1fr)}.crow{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sb{transform:translateX(-240px)}.sb.open{transform:translateX(0)}
+  .main{margin-left:0}.mnt{display:block}.content{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sb" id="sidebar">
+  <div class="gold-stripe"></div>
+  <div class="sbl">
+    <div class="sbl-n">GAD'S</div>
+    <div class="sbl-s">Admin · Gestão · Araçá</div>
+  </div>
+  <nav class="snav">
+    <div class="snav-s">Visão Geral</div>
+    <button class="si on" onclick="goPanel('dashboard',this)"><span class="si-ic">📊</span>Dashboard</button>
+    <button class="si" onclick="goPanel('orders',this)"><span class="si-ic">📦</span>Pedidos<span class="sibadge" id="ordBadge">0</span></button>
+
+    <div class="snav-s">Catálogo</div>
+    <button class="si" onclick="goPanel('products',this)"><span class="si-ic">🕶️</span>Produtos</button>
+    <button class="si" onclick="goPanel('categories',this)"><span class="si-ic">🏷️</span>Categorias</button>
+    <button class="si" onclick="goPanel('receipts',this)"><span class="si-ic">📋</span>Receitas<span class="sibadge" id="rxBadge">0</span></button>
+    <button class="si" onclick="goPanel('measures',this)"><span class="si-ic">📐</span>Medidas<span class="sibadge" id="msBadge">0</span></button>
+
+    <div class="snav-s">Marketing</div>
+    <button class="si" onclick="goPanel('promos',this)"><span class="si-ic">🎯</span>Promoções</button>
+    <button class="si" onclick="goPanel('customers',this)"><span class="si-ic">👥</span>Clientes</button>
+
+    <div class="snav-s">Sistema</div>
+    <button class="si" onclick="goPanel('settings',this)"><span class="si-ic">⚙️</span>Configurações</button>
+    <a class="si" href="index.html" target="_blank"><span class="si-ic">🌐</span>Ver App →</a>
+    <a class="si" href="medidas.html" target="_blank"><span class="si-ic">📐</span>Tomador AR →</a>
+  </nav>
+  <div class="suser">
+    <div class="suser-av">👨‍💼</div>
+    <div><div class="suser-n">Admin GAD'S</div><div class="suser-r">Administrador</div></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="tb-l">
+      <button class="mnt" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <h1 class="pgtit" id="pgTitle">Dashboard</h1>
+    </div>
+    <div class="tb-r">
+      <button class="tbtn tbtn-g" onclick="openNewProd()">＋ Novo Produto</button>
+      <button class="tbtn" onclick="exportData()">⬇ Exportar</button>
+      <button class="tbtn tbtn-r" onclick="if(confirm('Resetar TODOS os dados da loja?')){localStorage.clear();location.reload()}">🗑️ Reset</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="panel on" id="pn-dashboard">
+      <div id="alertArea"></div>
+      <div class="kgrid" id="kpiGrid"></div>
+      <div class="crow">
+        <div class="cc"><div class="cct">📈 Vendas por Categoria</div><div class="barchart" id="barChart"></div></div>
+        <div class="cc"><div class="cct">💳 Métodos de Pagamento</div><div id="donut"></div></div>
+      </div>
+      <div class="act"><div class="cct">⚡ Atividade Recente</div><div id="actList"></div></div>
+    </div>
+
+    <!-- ── PRODUCTS ── -->
+    <div class="panel" id="pn-products">
+      <div class="twrap">
+        <div class="thead">
+          <div class="ttit">Produtos <span id="prodCnt" style="font-size:13px;color:var(--c2);font-weight:400"></span></div>
+          <div class="tacts">
+            <input class="srch-inp" placeholder="🔍 Buscar produto..." id="prodSrch" oninput="renderProdsTable()">
+            <button class="tbtn tbtn-g" onclick="openNewProd()">＋ Novo</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Badge</th><th>Ações</th></tr></thead>
+            <tbody id="prodTbl"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CATEGORIES ── -->
+    <div class="panel" id="pn-categories">
+      <div class="twrap" style="padding:22px">
+        <div class="cct">🏷️ Categorias do Catálogo</div>
+        <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px" id="catGrid"></div>
+        <div style="margin-top:22px;padding-top:18px;border-top:var(--brd)">
+          <div class="cct" style="font-size:16px;margin-bottom:13px">Adicionar Categoria</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div><label class="fl">Emoji</label><input class="fi" id="ncEmoji" placeholder="🕶️" style="width:72px"></div>
+            <div style="flex:1"><label class="fl">Nome</label><input class="fi" id="ncName" placeholder="Nome da categoria"></div>
+            <div><label class="fl">Slug</label><input class="fi" id="ncSlug" placeholder="slug-unico" style="width:130px"></div>
+            <button class="bsave" style="flex:none;padding:11px 18px;margin-top:19px" onclick="addCat()">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RECEIPTS ── -->
+    <div class="panel" id="pn-receipts">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--tx)">Receitas Recebidas</h2>
+        <button class="tbtn tbtn-r" onclick="if(confirm('Limpar todas?')){localStorage.removeItem('gads_receipts');renderReceipts()}">🗑️ Limpar</button>
+      </div>
+      <div class="rxgrid" id="rxGrid"></div>
+    </div>
+
+    <!-- ── MEASURES ── -->
+    <div class="panel" id="pn-measures">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--tx)">📐 Medidas Capturadas</h2>
+        <div style="display:flex;gap:9px">
+          <a href="medidas.html" target="_blank" class="tbtn tbtn-g">📐 Abrir Tomador AR</a>
+          <button class="tbtn tbtn-r" onclick="if(confirm('Limpar?')){localStorage.removeItem('gads_measures');renderMeasures()}">🗑️ Limpar</button>
+        </div>
+      </div>
+      <div id="measuresList"></div>
+    </div>
+
+    <!-- ── ORDERS ── -->
+    <div class="panel" id="pn-orders">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--tx)">Pedidos</h2>
+        <select class="fi" style="width:auto;padding:8px 14px;border-radius:50px" id="ordFilter" onchange="renderOrders()">
+          <option value="">Todos</option><option value="pending">Pendentes</option><option value="paid">Pagos</option><option value="shipped">Enviados</option>
+        </select>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+
+    <!-- ── PROMOS ── -->
+    <div class="panel" id="pn-promos">
+      <div class="twrap" style="padding:22px">
+        <div class="cct">🎯 Promoções e Cupons</div>
+        <div id="promoList" style="margin-top:16px"></div>
+        <div style="margin-top:22px;padding-top:18px;border-top:var(--brd)">
+          <div class="cct" style="font-size:16px;margin-bottom:13px">Criar Promoção</div>
+          <div class="fgrid">
+            <div class="frow"><label class="fl">Código do Cupom</label><input class="fi" id="pcod" placeholder="GADS10" style="text-transform:uppercase"></div>
+            <div class="frow"><label class="fl">Desconto (%)</label><input class="fi" type="number" id="pdesc" placeholder="10"></div>
+            <div class="frow"><label class="fl">Válido até</label><input class="fi" type="date" id="pdate"></div>
+            <div class="frow"><label class="fl">Aplicar em</label>
+              <select class="fi fsel" id="pcat"><option value="all">Todos os produtos</option><option>sol</option><option>grau</option><option>lentes</option><option>infantil</option><option>acessorios</option></select>
+            </div>
+          </div>
+          <button class="bsave" onclick="addPromo()">🎯 Criar Promoção</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOMERS ── -->
+    <div class="panel" id="pn-customers">
+      <div class="twrap">
+        <div class="thead"><div class="ttit">Clientes Cadastrados</div></div>
+        <table class="tbl">
+          <thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Pontos GAD'S Club</th><th>Ações</th></tr></thead>
+          <tbody id="custTbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="panel" id="pn-settings">
+      <div class="twrap" style="padding:22px;max-width:600px">
+        <div class="cct">⚙️ Configurações da Loja</div>
+        <div style="margin-top:22px;display:flex;flex-direction:column;gap:14px">
+          <div class="frow"><label class="fl">Nome da Loja</label><input class="fi" id="cfgName" value="GAD'S Ótica"></div>
+          <div class="frow"><label class="fl">WhatsApp</label><input class="fi" id="cfgWA" value="+55 81 99782-1384"></div>
+          <div class="frow"><label class="fl">Endereço</label><input class="fi" id="cfgAddr" value="Rua Arq. Luiz Nunes, 873 – Galeria Araçá, Imbiribeira, Recife-PE"></div>
+          <div class="frow"><label class="fl">Texto Barra Promo</label><input class="fi" id="cfgPrm" value="✨ GAD'S Ótica — Óculos de grau, sol e lentes de contato · Araçá, Imbiribeira, Recife"></div>
+          <div class="frow"><label class="fl">Chave Pix</label><input class="fi" id="cfgPix" value="(81) 99782-1384"></div>
+          <div class="frow"><label class="fl">Instagram</label><input class="fi" id="cfgIg" value="@oticagads"></div>
+          <div class="frow"><label class="fl">Horário</label><input class="fi" id="cfgHr" value="Seg–Sex 9h–17h30 · Sáb 9h–12h · Dom Fechado"></div>
+          <div style="display:flex;gap:10px">
+            <button class="bsave" onclick="saveCfg()">💾 Salvar Configurações</button>
+            <button class="bcanc" onclick="if(confirm('Resetar?')){localStorage.removeItem('gads_config');location.reload()}">↺ Resetar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══ PRODUCT MODAL ══ -->
+<div class="mbg" id="prodModal" onclick="if(event.target===this)closeModal()">
+  <div class="mbox">
+    <div class="mhd"><div class="mtt" id="modalTit">Novo Produto</div><button class="mcl" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="frow" style="grid-column:span 2"><label class="fl">Nome do Produto</label><input class="fi" id="pName" placeholder="Ex: Óculos de Sol Aviador Ray-Ban"></div>
+        <div class="frow"><label class="fl">Subtítulo / Material</label><input class="fi" id="pSub" placeholder="Metal · Feminino"></div>
+        <div class="frow"><label class="fl">Preço (R$)</label><input class="fi" type="number" id="pPrice" placeholder="149.90" step="0.01"></div>
+        <div class="frow"><label class="fl">Estoque</label><input class="fi" type="number" id="pStock" placeholder="10"></div>
+        <div class="frow"><label class="fl">Categorias</label><input class="fi" id="pCat" placeholder="sol, grau, lentes, infantil, acetato, metal"></div>
+      </div>
+      <div class="frow"><label class="fl">Descrição</label><textarea class="fi fta" id="pDesc" placeholder="Descrição detalhada do produto..."></textarea></div>
+      <div class="frow"><label class="fl">Variantes (separadas por vírgula)</label><input class="fi" id="pVars" placeholder="Preto Fosco, Azul Petróleo, Tartaruga"></div>
+      <div class="frow">
+        <label class="fl">Emoji</label>
+        <div class="egrid" id="emojiPicker">
+          <button class="eb on" data-e="🕶️">🕶️</button><button class="eb" data-e="👓">👓</button><button class="eb" data-e="😎">😎</button>
+          <button class="eb" data-e="🌈">🌈</button><button class="eb" data-e="👁️">👁️</button><button class="eb" data-e="💎">💎</button>
+          <button class="eb" data-e="✨">✨</button><button class="eb" data-e="🧴">🧴</button>
+        </div>
+      </div>
+      <div class="frow">
+        <label class="fl">Badge</label>
+        <div class="bdgrow">
+          <button class="bopt on" data-b="" onclick="selBadge(this,'')">Nenhum</button>
+          <button class="bopt" data-b="new" onclick="selBadge(this,'new')">🆕 Novo</button>
+          <button class="bopt" data-b="sale" onclick="selBadge(this,'sale')">🔥 Oferta</button>
+        </div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="bcanc" onclick="closeModal()">Cancelar</button>
+      <button class="bdel" id="delBtn" onclick="deleteCurProd()" style="display:none">🗑️ Excluir</button>
+      <button class="bsave" onclick="saveProd()">💾 Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="admToast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = v => 'R$ '+Number(v).toFixed(2).replace('.',',');
+
+// Load data from localStorage (shared with PWA app)
+let PRODS = JSON.parse(localStorage.getItem('gads_products')||'null') || [
+  {id:1,name:"Óculos de Sol Quadrado UV400",sub:"Acetato · Unissex",price:129.90,emoji:"🕶️",cat:"sol,acetato",badge:"new",desc:"Óculos de sol em acetato com proteção UV400.",vars:["Preto Fosco","Tartaruga","Marrom"],stock:20},
+  {id:2,name:"Armação de Grau Metal Fina",sub:"Metal · Masculino",price:189.90,emoji:"👓",cat:"grau,metal",badge:"new",desc:"Armação metálica fina e resistente.",vars:["Dourado","Prata","Preto"],stock:14},
+  {id:3,name:"Óculos de Sol Aviador",sub:"Metal · Unissex",price:149.90,emoji:"😎",cat:"sol,metal",badge:"",desc:"O clássico aviador em versão premium.",vars:["Dourado/Espelhado","Prata/Azul","Preto/Fumê"],stock:12},
+  {id:4,name:"Armação Infantil Colorida",sub:"TR90 · Infantil",price:99.90,emoji:"🌈",cat:"infantil",badge:"",desc:"Armação infantil flexível e resistente.",vars:["Azul","Rosa","Verde","Vermelho"],stock:30},
+  {id:5,name:"Óculos de Sol Cat Eye",sub:"Acetato · Feminino",price:139.90,emoji:"😎",cat:"sol,acetato",badge:"sale",desc:"Design cat eye elegante em acetato italiano.",vars:["Preto/Dourado","Tartaruga/Dourado","Vinho"],stock:10},
+  {id:6,name:"Lente de Contato Mensal",sub:"Esférica · Par",price:79.90,emoji:"👁️",cat:"lentes",badge:"",desc:"Lentes de contato mensais de alta permeabilidade.",vars:["Transparente","Verde","Mel","Cinza"],stock:50},
+];
+
+let CATS = JSON.parse(localStorage.getItem('gads_cats')||'null') || [
+  {emoji:'☀️',name:'Óculos de Sol',slug:'sol'},
+  {emoji:'👓',name:'Óculos de Grau',slug:'grau'},
+  {emoji:'👁️',name:'Lentes de Contato',slug:'lentes'},
+  {emoji:'🧒',name:'Infantil',slug:'infantil'},
+  {emoji:'🔘',name:'Acetato',slug:'acetato'},
+  {emoji:'⚙️',name:'Metal',slug:'metal'},
+  {emoji:'🧴',name:'Acessórios',slug:'acessorios'},
+];
+
+let ORDERS = JSON.parse(localStorage.getItem('gads_orders')||'null') || [
+  {id:'GADS-001',customer:'Fernanda Lima',email:'fernanda@email.com',items:'Óculos de Sol Aviador x1',total:149.90,method:'pix',status:'paid',date:'2026-05-20'},
+  {id:'GADS-002',customer:'Roberto Alves',email:'roberto@email.com',items:'Armação de Grau Metal x1',total:189.90,method:'card',status:'shipped',date:'2026-05-21'},
+  {id:'GADS-003',customer:'Marcia Santos',email:'marcia@email.com',items:'Lente de Contato Mensal x2',total:159.80,method:'wa',status:'pending',date:'2026-05-27'},
+];
+
+let PROMOS = JSON.parse(localStorage.getItem('gads_promos')||'[]');
+let editId=null, selEmoji='🕶️', selBadgeV='';
+
+function save(){
+  localStorage.setItem('gads_products',JSON.stringify(PRODS));
+  localStorage.setItem('gads_cats',JSON.stringify(CATS));
+  localStorage.setItem('gads_orders',JSON.stringify(ORDERS));
+  localStorage.setItem('gads_promos',JSON.stringify(PROMOS));
+}
+
+function toast(msg,bg){
+  const t=$('admToast');t.textContent=msg;t.style.background=bg||'var(--bg3)';t.style.color=bg?'#fff':'var(--tx)';
+  t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ── NAVIGATION ──
+function goPanel(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
+  $('pn-'+id).classList.add('on');if(el)el.classList.add('on');
+  const T={dashboard:'Dashboard',products:'Produtos',categories:'Categorias',receipts:'Receitas Médicas',orders:'Pedidos',promos:'Promoções',customers:'Clientes',settings:'Configurações',measures:'Medidas Ópticas'};
+  $('pgTitle').textContent=T[id]||id;
+  if(id==='products')renderProdsTable();
+  if(id==='receipts')renderReceipts();
+  if(id==='orders')renderOrders();
+  if(id==='categories')renderCats();
+  if(id==='customers')renderCusts();
+  if(id==='promos')renderPromos();
+  if(id==='measures')renderMeasures();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const rev=ORDERS.filter(o=>o.status!=='pending').reduce((a,o)=>a+o.total,0);
+  const lowStock=PRODS.filter(p=>(p.stock||0)<=3).length;
+  const users=JSON.parse(localStorage.getItem('gads_users')||'[]');
+
+  if(lowStock){
+    $('alertArea').innerHTML=`<div class="alert-bar"><span>⚠️ ${lowStock} produto(s) com estoque baixo. <a href="#" onclick="goPanel('products',null)" style="color:var(--au)">Ver agora →</a></span></div>`;
+  }
+
+  $('kpiGrid').innerHTML=`
+    <div class="kpi kgold"><div class="kicon">💰</div><span class="kval">${fmt(rev)}</span><span class="klbl">Receita Total</span><div class="ktrend up">▲ +12% este mês</div></div>
+    <div class="kpi kred"><div class="kicon">📦</div><span class="kval">${ORDERS.length}</span><span class="klbl">Total de Pedidos</span><div class="ktrend up">▲ +${ORDERS.filter(o=>o.status==='pending').length} pendentes</div></div>
+    <div class="kpi kgreen"><div class="kicon">🕶️</div><span class="kval">${PRODS.length}</span><span class="klbl">Produtos Ativos</span><div class="ktrend ${lowStock?'dn':'up'}">${lowStock?`⚠️ ${lowStock} baixo estoque`:'✓ Todos ok'}</div></div>
+    <div class="kpi kblue"><div class="kicon">👥</div><span class="kval">${users.length}</span><span class="klbl">Clientes Cadastrados</span><div class="ktrend up">▲ +2 novos</div></div>`;
+
+  const cats=[{n:'Óculos de Sol',v:38,c:'var(--au)'},{n:'Armações de Grau',v:30,c:'var(--aum)'},{n:'Lentes',v:18,c:'var(--g)'},{n:'Infantil',v:9,c:'#74b9ff'},{n:'Acessórios',v:5,c:'var(--c2)'}];
+  $('barChart').innerHTML=cats.map(c=>`<div class="barrow"><span class="barlbl">${c.n}</span><div class="barwrap"><div class="barfill" style="width:${c.v}%;background:${c.c}"></div></div><span class="barval">${c.v}%</span></div>`).join('');
+
+  const pm=[{n:'Pix',v:42,c:'var(--g)'},{n:'Cartão',v:36,c:'var(--au)'},{n:'WhatsApp',v:16,c:'var(--gr)'},{n:'Boleto',v:6,c:'var(--o)'}];
+  $('donut').innerHTML=pm.map(p=>`<div class="ditem"><div class="ddll"><div class="ddot" style="background:${p.c}"></div>${p.n}</div><span class="dpct">${p.v}%</span></div>`).join('');
+
+  $('ordBadge').textContent=ORDERS.filter(o=>o.status==='pending').length;
+
+  const rxs=JSON.parse(localStorage.getItem('gads_receipts')||'[]');
+  $('rxBadge').textContent=rxs.length;
+  const ms=JSON.parse(localStorage.getItem('gads_measures')||'[]');
+  $('msBadge').textContent=ms.length;
+
+  const acts=[
+    {ic:'💰',cl:'sale',tx:`Pedido GADS-003 – Marcia Santos – R$ 159,80`,tm:'Hoje, 10:14'},
+    {ic:'👤',cl:'user',tx:'Novo cadastro: Roberto Alves',tm:'Hoje, 09:22'},
+    {ic:'📋',cl:'rx',tx:`${rxs.length} receita(s) médica(s) recebida(s)`,tm:'Recente'},
+    {ic:'⚠️',cl:'warn',tx:`Estoque: ${lowStock>0?lowStock+' produto(s) com atenção':'Todos ok'}`,tm:'Atualizado'},
+  ];
+  $('actList').innerHTML=acts.map(a=>`<div class="aitem"><div class="aicon ${a.cl}">${a.ic}</div><div><div class="atxt">${a.tx}</div><div class="atime">${a.tm}</div></div></div>`).join('');
+}
+
+// ── PRODUCTS ──
+function renderProdsTable(){
+  const q=($('prodSrch')?.value||'').toLowerCase();
+  const list=q?PRODS.filter(p=>p.name.toLowerCase().includes(q)||p.sub.toLowerCase().includes(q)):PRODS;
+  $('prodCnt').textContent=`(${list.length})`;
+  const scls=s=>s<=0?'out':s<=3?'low':'ok';
+  const stxt=s=>s<=0?'Esgotado':s<=3?`Baixo (${s})`:String(s);
+  $('prodTbl').innerHTML=list.map(p=>`
+    <tr>
+      <td><div class="pce"><span class="pce-em">${p.emoji}</span><div><div class="pce-n">${p.name}</div><div class="pce-s">${p.sub}</div></div></div></td>
+      <td>${(p.cat||'').split(',').map(c=>`<span class="cpill">${c.trim()}</span>`).join('')}</td>
+      <td><strong style="color:var(--aul);font-family:'Cormorant Garamond',serif;font-size:16px">${fmt(p.price)}</strong></td>
+      <td><span class="stk ${scls(p.stock||0)}">${stxt(p.stock||0)}</span></td>
+      <td>${p.badge?`<span class="cpill" style="background:${p.badge==='new'?'rgba(201,146,42,.15)':'rgba(214,48,49,.12)'};color:${p.badge==='new'?'var(--aul)':'var(--r)'}">${p.badge==='new'?'Novo':'Oferta'}</span>`:'—'}</td>
+      <td><div class="acbts">
+        <button class="ab" title="Editar" onclick="openEditProd(${p.id})">✏️</button>
+        <button class="ab" title="Duplicar" onclick="dupProd(${p.id})">📋</button>
+        <button class="ab del" title="Excluir" onclick="if(confirm('Excluir ${p.name}?')){PRODS=PRODS.filter(x=>x.id!==${p.id});save();renderProdsTable();toast('🗑️ Excluído','var(--r)')}">🗑️</button>
+      </div></td>
+    </tr>`).join('')||'<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--c3)">Nenhum produto cadastrado</td></tr>';
+}
+
+// ── PRODUCT MODAL ──
+function openNewProd(){
+  editId=null;$('modalTit').textContent='Novo Produto';$('delBtn').style.display='none';
+  ['pName','pSub','pPrice','pStock','pCat','pDesc','pVars'].forEach(id=>{if($(id))$(id).value='';});
+  selEmoji='🕶️';selBadgeV='';
+  document.querySelectorAll('.eb').forEach(b=>b.classList.toggle('on',b.dataset.e==='🕶️'));
+  document.querySelectorAll('.bopt').forEach(b=>b.classList.toggle('on',b.dataset.b===''));
+  $('prodModal').classList.add('on');
+}
+function openEditProd(id){
+  const p=PRODS.find(x=>x.id===id);if(!p)return;
+  editId=id;$('modalTit').textContent='Editar Produto';$('delBtn').style.display='block';
+  $('pName').value=p.name;$('pSub').value=p.sub;$('pPrice').value=p.price;$('pStock').value=p.stock||0;
+  $('pCat').value=p.cat;$('pDesc').value=p.desc||'';$('pVars').value=(p.vars||[]).join(', ');
+  selEmoji=p.emoji;selBadgeV=p.badge||'';
+  document.querySelectorAll('.eb').forEach(b=>b.classList.toggle('on',b.dataset.e===p.emoji));
+  document.querySelectorAll('.bopt').forEach(b=>b.classList.toggle('on',b.dataset.b===(p.badge||'')));
+  $('prodModal').classList.add('on');
+}
+function closeModal(){ $('prodModal').classList.remove('on'); }
+function saveProd(){
+  const name=$('pName').value.trim(),price=parseFloat($('pPrice').value);
+  if(!name||!price){toast('⚠️ Nome e Preço são obrigatórios','var(--r)');return;}
+  const p={
+    id:editId||Date.now(),name,
+    sub:$('pSub').value.trim()||"GAD'S Ótica",price,
+    stock:parseInt($('pStock').value)||0,
+    cat:$('pCat').value.trim()||'outros',
+    desc:$('pDesc').value.trim(),
+    vars:$('pVars').value.split(',').map(s=>s.trim()).filter(Boolean),
+    emoji:selEmoji,badge:selBadgeV
+  };
+  if(editId){const i=PRODS.findIndex(x=>x.id===editId);if(i>=0)PRODS[i]=p;}else PRODS.push(p);
+  save();closeModal();renderProdsTable();toast(`✅ "${name}" salvo!`);
+}
+function deleteCurProd(){if(editId&&confirm('Excluir produto?')){PRODS=PRODS.filter(x=>x.id!==editId);save();closeModal();renderProdsTable();toast('🗑️ Excluído','var(--r)');}}
+function dupProd(id){const p=PRODS.find(x=>x.id===id);if(!p)return;PRODS.push({...p,id:Date.now(),name:'[Cópia] '+p.name});save();renderProdsTable();toast('📋 Duplicado!');}
+
+document.querySelectorAll('.eb').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('.eb').forEach(x=>x.classList.remove('on'));b.classList.add('on');selEmoji=b.dataset.e;});
+});
+function selBadge(el,v){document.querySelectorAll('.bopt').forEach(b=>b.classList.remove('on'));el.classList.add('on');selBadgeV=v;}
+
+// ── CATEGORIES ──
+function renderCats(){
+  $('catGrid').innerHTML=CATS.map((c,i)=>`
+    <div style="background:var(--bg2);border:var(--brd);border-radius:var(--radlg);padding:15px;display:flex;align-items:center;gap:11px">
+      <span style="font-size:26px">${c.emoji}</span>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px;color:var(--tx)">${c.name}</div><div style="font-size:9.5px;color:var(--c3);font-family:'JetBrains Mono',monospace">${c.slug}</div></div>
+      <button class="ab del" onclick="if(confirm('Excluir?')){CATS.splice(${i},1);save();renderCats();}">🗑️</button>
+    </div>`).join('');
+}
+function addCat(){
+  const emoji=$('ncEmoji').value||'📦',name=$('ncName').value.trim(),slug=$('ncSlug').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if(!name||!slug){toast('⚠️ Preencha nome e slug','var(--r)');return;}
+  CATS.push({emoji,name,slug});save();renderCats();
+  $('ncName').value='';$('ncSlug').value='';$('ncEmoji').value='';
+  toast('✅ Categoria adicionada!');
+}
+
+// ── RECEIPTS ──
+function renderReceipts(){
+  const rxs=JSON.parse(localStorage.getItem('gads_receipts')||'[]');
+  $('rxBadge').textContent=rxs.length;
+  $('rxGrid').innerHTML=rxs.length?rxs.map((r,i)=>`
+    <div class="rxcard">
+      <div style="font-size:28px;margin-bottom:7px">📋</div>
+      <div class="rxname">${r.name}</div>
+      <div class="rxdate">${new Date(r.date).toLocaleString('pt-BR')}</div>
+      <div style="font-size:10.5px;color:var(--c3);margin-bottom:10px">${(r.size/1024).toFixed(0)} KB · ${r.type}</div>
+      <div style="display:flex;gap:7px">
+        <button class="oab" style="background:rgba(201,146,42,.12);color:var(--au);padding:7px 12px;border-radius:7px;border:var(--brd);font-size:11px;font-weight:600;cursor:pointer" onclick="toast('📤 Encaminhado para o óptico!')">📤 Encaminhar</button>
+        <button class="oab" style="background:rgba(214,48,49,.1);color:var(--r);padding:7px 12px;border-radius:7px;border:1px solid rgba(214,48,49,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="delRx(${i})">🗑️</button>
+      </div>
+    </div>`).join(''):'<p style="color:var(--c2);padding:18px 0">Nenhuma receita recebida ainda. Elas aparecem aqui quando enviadas pelo App.</p>';
+}
+function delRx(i){const rxs=JSON.parse(localStorage.getItem('gads_receipts')||'[]');rxs.splice(i,1);localStorage.setItem('gads_receipts',JSON.stringify(rxs));renderReceipts();toast('🗑️ Removida');}
+
+// ── ORDERS ──
+function renderOrders(){
+  const f=$('ordFilter')?.value||'';
+  const list=f?ORDERS.filter(o=>o.status===f):ORDERS;
+  $('ordBadge').textContent=ORDERS.filter(o=>o.status==='pending').length;
+  const SM={pending:{cls:'pending',lbl:'Pendente'},paid:{cls:'paid',lbl:'Pago'},shipped:{cls:'shipped',lbl:'Enviado'}};
+  $('ordersList').innerHTML=list.length?list.map(o=>`
+    <div class="ocard">
+      <div class="ohd"><span class="oid">${o.id}</span><span class="ost ${SM[o.status]?.cls||'pending'}">${SM[o.status]?.lbl||o.status}</span></div>
+      <div style="font-size:13px;color:var(--c1);margin-bottom:7px"><strong>${o.customer}</strong> · ${o.email}</div>
+      <div style="font-size:12.5px;color:var(--c2);margin-bottom:7px">${o.items}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--aul)">${fmt(o.total)}</div>
+        <div style="font-size:9.5px;color:var(--c3);font-family:'JetBrains Mono',monospace">${(o.method||'').toUpperCase()} · ${o.date}</div>
+      </div>
+      <div class="oabts">
+        <button class="oab" style="background:rgba(0,184,148,.12);color:var(--g);padding:7px 12px;border-radius:7px;border:1px solid rgba(0,184,148,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="chgOrd('${o.id}','paid')">✅ Marcar Pago</button>
+        <button class="oab" style="background:rgba(116,185,255,.1);color:#74b9ff;padding:7px 12px;border-radius:7px;border:1px solid rgba(116,185,255,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="chgOrd('${o.id}','shipped')">🚚 Enviado</button>
+        <button class="oab" style="background:rgba(37,211,102,.1);color:var(--gr);padding:7px 12px;border-radius:7px;border:1px solid rgba(37,211,102,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="waOrd('${o.id}','${o.customer}')">💬 WhatsApp</button>
+        <button class="oab" style="background:rgba(214,48,49,.08);color:var(--r);padding:7px 12px;border-radius:7px;border:1px solid rgba(214,48,49,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="if(confirm('Excluir pedido ${o.id}?')){ORDERS=ORDERS.filter(x=>x.id!=='${o.id}');save();renderOrders();toast('🗑️ Excluído')}">🗑️</button>
+      </div>
+    </div>`).join(''):'<p style="color:var(--c2);padding:18px 0">Nenhum pedido encontrado.</p>';
+}
+function chgOrd(id,st){const o=ORDERS.find(x=>x.id===id);if(o){o.status=st;save();renderOrders();toast(`✅ Pedido ${id} → ${st}`);}}
+function waOrd(id,name){window.open(`https://wa.me/5581997821384?text=Olá%20${encodeURIComponent(name)}!%20Seu%20pedido%20${id}%20da%20GAD'S%20Ótica%20foi%20confirmado.%20Obrigado!`,'_blank');}
+
+// ── PROMOS ──
+function renderPromos(){
+  $('promoList').innerHTML=PROMOS.length?PROMOS.map((p,i)=>`
+    <div style="background:var(--bg2);border:var(--brd);border-radius:11px;padding:15px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--aul)">${p.code}</div>
+        <div style="font-size:12px;color:var(--c2)">${p.discount}% off · ${p.cat==='all'?'Todos':p.cat} · até ${p.date}</div>
+      </div>
+      <button class="ab del" onclick="PROMOS.splice(${i},1);save();renderPromos();">🗑️</button>
+    </div>`).join(''):'<p style="color:var(--c2);margin-bottom:16px">Nenhuma promoção criada.</p>';
+}
+function addPromo(){
+  const code=$('pcod').value.trim().toUpperCase(),discount=$('pdesc').value,date=$('pdate').value,cat=$('pcat').value;
+  if(!code||!discount||!date){toast('⚠️ Preencha todos os campos','var(--r)');return;}
+  PROMOS.push({code,discount,date,cat});save();renderPromos();
+  $('pcod').value='';$('pdesc').value='';$('pdate').value='';
+  toast(`🎯 Cupom ${code} criado!`);
+}
+
+// ── MEASURES ──
+function renderMeasures(){
+  const ms=JSON.parse(localStorage.getItem('gads_measures')||'[]');
+  $('msBadge').textContent=ms.length;
+  $('measuresList').innerHTML=ms.length?ms.map((m,i)=>`
+    <div class="mcard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--tx)">${m.client||'Cliente'}</div>
+          <div style="font-size:9.5px;color:var(--c3);font-family:'JetBrains Mono',monospace">${new Date(m.date).toLocaleString('pt-BR')} · ${m.product||'Medição Digital'}</div>
+        </div>
+        <button class="ab del" onclick="delMs(${i})">🗑️</button>
+      </div>
+      <div class="mcard-grid">
+        <div class="mcard-m"><div class="mcard-v">${m.measures?.dnpTot||'—'}</div><div class="mcard-l">DNP Total</div></div>
+        <div class="mcard-m"><div class="mcard-v">${m.measures?.alt||'—'}</div><div class="mcard-l">Altura mm</div></div>
+        <div class="mcard-m"><div class="mcard-v">${m.measures?.diam||'—'}</div><div class="mcard-l">Diâmetro</div></div>
+        <div class="mcard-m"><div class="mcard-v">${m.measures?.dcv||'—'}</div><div class="mcard-l">DCV mm</div></div>
+      </div>
+      <div style="margin-top:9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="oab" style="background:rgba(37,211,102,.1);color:var(--gr);padding:7px 12px;border-radius:7px;border:1px solid rgba(37,211,102,.2);font-size:11px;font-weight:600;cursor:pointer" onclick="window.open('https://wa.me/5581997821384?text='+encodeURIComponent('📐 Medidas GAD\\'S Ótica — ${m.client||'Cliente'}\\nDNP: ${m.measures?.dnpTot}mm | Altura: ${m.measures?.alt}mm | Diâmetro: ${m.measures?.diam}mm\\nAngulo: ${m.measures?.angPant}° | DCV: ${m.measures?.dcv}mm'),'_blank')">💬 WA</button>
+        <span style="font-size:10.5px;color:var(--c2);font-family:'JetBrains Mono',monospace">OD: ${m.measures?.dnpOD}mm | OE: ${m.measures?.dnpOE}mm | Ângulo: ${m.measures?.angPant}°</span>
+      </div>
+    </div>`).join(''):'<p style="color:var(--c2);padding:18px 0">Nenhuma medida registrada. <a href="medidas.html" target="_blank" style="color:var(--au)">Abrir Tomador de Medidas →</a></p>';
+}
+function delMs(i){const ms=JSON.parse(localStorage.getItem('gads_measures')||'[]');ms.splice(i,1);localStorage.setItem('gads_measures',JSON.stringify(ms));renderMeasures();}
+
+// ── CUSTOMERS ──
+function renderCusts(){
+  const users=JSON.parse(localStorage.getItem('gads_users')||'[]');
+  $('custTbl').innerHTML=users.length?users.map(u=>`
+    <tr>
+      <td><strong style="color:var(--tx)">${u.name}</strong></td>
+      <td style="color:var(--c2)">${u.email}</td>
+      <td style="color:var(--c2)">${u.phone||'—'}</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:var(--aul);font-weight:700">${(u.pts||0).toLocaleString()} pts</span></td>
+      <td><div class="acbts">
+        <button class="ab" onclick="window.open('https://wa.me/55${(u.phone||'').replace(/\D/g,'')}','_blank')" title="WhatsApp">💬</button>
+        <button class="ab" onclick="grantPts('${u.id}')" title="Adicionar pontos">🏆</button>
+      </div></td>
+    </tr>`).join(''):'<tr><td colspan="5" style="padding:28px;text-align:center;color:var(--c3)">Nenhum cliente cadastrado</td></tr>';
+}
+function grantPts(id){
+  const pts=parseInt(prompt('Pontos a adicionar?','100'));if(!pts||isNaN(pts))return;
+  const users=JSON.parse(localStorage.getItem('gads_users')||'[]');
+  const u=users.find(x=>String(x.id)===String(id));
+  if(u){u.pts=(u.pts||0)+pts;localStorage.setItem('gads_users',JSON.stringify(users));renderCusts();toast(`🏆 +${pts} pts adicionados!`);}
+}
+
+// ── SETTINGS ──
+function saveCfg(){
+  localStorage.setItem('gads_config',JSON.stringify({
+    name:$('cfgName').value,wa:$('cfgWA').value,addr:$('cfgAddr').value,
+    promo:$('cfgPrm').value,pix:$('cfgPix').value,ig:$('cfgIg').value,hr:$('cfgHr').value
+  }));
+  toast('✅ Configurações salvas!');
+}
+
+// ── EXPORT ──
+function exportData(){
+  const blob=new Blob([JSON.stringify({
+    products:PRODS,orders:ORDERS,categories:CATS,promos:PROMOS,
+    receipts:JSON.parse(localStorage.getItem('gads_receipts')||'[]'),
+    measures:JSON.parse(localStorage.getItem('gads_measures')||'[]'),
+    customers:JSON.parse(localStorage.getItem('gads_users')||'[]'),
+    exportedAt:new Date().toISOString(),store:"GAD'S Ótica Araçá"
+  },null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`gads-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  toast('⬇️ Backup exportado!');
+}
+
+// ── INIT ──
+renderDashboard();
+renderProdsTable();
+</script>
+</body>
+</html>
